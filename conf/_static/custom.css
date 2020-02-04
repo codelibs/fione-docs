@@ -1,0 +1,36 @@
+.wy-side-nav-search p {
+  margin-bottom: 0.6em;
+}
+.wy-side-nav-search p.pr a {
+  color: rgba(255, 255, 255, 0.8);
+}
+.wy-side-nav-search p.pr a:hover {
+  color: #fff;
+}
+.side-by-side {
+  display: inline-block;
+}
+html*.side-by-side {
+  display: inline;
+  zoom: 1;
+}
+.side-by-side > a img {
+  margin-right: 15px;
+}
+.wy-breadcrumbs a.externalLink:visited {
+  color: #2980b9;
+}
+
+/* override table width restrictions */
+@media screen and (min-width: 767px) {
+
+   .wy-table-responsive table td {
+      /* !important prevents the common CSS stylesheets from overriding
+         this as on RTD they are loaded after this stylesheet */
+      white-space: normal !important;
+   }
+
+   .wy-table-responsive {
+      overflow: visible !important;
+   }
+}
