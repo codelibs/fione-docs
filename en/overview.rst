@@ -1,8 +1,0 @@
-========
-Overview
-========
-
-.. toctree::
-
-   quick-start
-
