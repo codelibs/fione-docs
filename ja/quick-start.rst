@@ -17,7 +17,7 @@ FioneのDocker環境を取得して、起動します。
 
 .. code-block:: bash
 
-   $ git clone https://github.com/codelibs/docker-fione.git
+   $ git clone https://github.com/codelibs/docker-fione.git -b v13.6.0
    $ cd docker-fione/compose
    $ docker-compose up
 
