@@ -10,6 +10,55 @@
 * `Docker <https://docs.docker.com/get-docker/>`_
 * `Docker Compose <https://docs.docker.com/compose/>`_
 
+システムの設定
+==============
+
+Dockerのインストール後に環境に合わせて、以下のようにvm.max_map_countを設定します。
+
+Linux
+-----
+
+/etc/sysctl.confでvm.max_map_countを以下の値以上を設定します。
+設定値を反映するためには再起動をしてください。
+
+.. code-block:: bash
+
+    # grep vm.max_map_count /etc/sysctl.conf
+    # vm.max_map_count=262144
+
+一時的に試す場合は以下のコマンドを利用することもできます。
+
+.. code-block:: bash
+
+    # sysctl -w vm.max_map_count=262144
+
+Docker for Mac
+--------------
+
+vm.max_map_countを設定するためには仮想マシン上の設定を変更します。
+
+.. code-block:: bash
+
+    screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty
+
+を実行して、仮想マシン内で以下を実行します。
+
+.. code-block:: bash
+
+    sysctl -w vm.max_map_count=262144
+
+Ctrl-a dでscreenのセッションを終了します。
+
+Docker Desctop(Windows/Mac)
+---------------------------
+
+docker-machineを通して、vm.max_map_countを設定します。
+
+.. code-block:: bash
+
+    docker-machine ssh
+    sudo sysctl -w vm.max_map_count=262144
+
 Fioneの起動
 ===========
 

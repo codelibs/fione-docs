@@ -8,6 +8,57 @@ Prerequisite
 * Docker
 * Docker Compose
 
+System Settings
+===============
+
+The vm.max_map_count kernel setting must be set to at least 262144.
+vm.max_map_count setting depends on your platform.
+
+Linux
+-----
+
+The vm.max_map_count setting should be set permanently in /etc/sysctl.conf:
+
+.. code-block:: bash
+
+    grep vm.max_map_count /etc/sysctl.conf
+    vm.max_map_count=262144
+
+To apply the setting on a live system, run:
+
+.. code-block:: bash
+
+    sysctl -w vm.max_map_count=262144
+
+Docker for Mac
+--------------
+
+The vm.max_map_count setting must be set within the xhyve virtual machine:
+
+From the command line, run:
+
+.. code-block:: bash
+
+    screen ~/Library/Containers/com.docker.docker/Data/vms/0/tty
+
+Press enter and use`sysctl` to configure vm.max_map_count:
+
+.. code-block:: bash
+
+    sysctl -w vm.max_map_count=262144
+
+To exit the screen session, type Ctrl a d.
+
+Docker Desktop(Windows/Mac)
+---------------------------
+
+The vm.max_map_count setting must be set via docker-machine:
+
+.. code-block:: bash
+
+    docker-machine ssh
+    sudo sysctl -w vm.max_map_count=262144
+
 Start Fione
 ===========
 
