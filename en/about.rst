@@ -1,6 +1,6 @@
-============================
-Enterprise AI Platform Fione
-============================
+========
+Overview
+========
 
 What is Fione?
 ==============
@@ -26,17 +26,4 @@ Features
 - Training Data Management
 
 - Visualize Learning Results
-
-
-.. hidden toctree
-
-.. toctree::
-   :maxdepth: 3
-   :titlesonly:
-   :hidden:
-
-   about
-   quick-start
-   Forum <https://discuss.codelibs.org/c/FioneEN>
-   GitHub <https://github.com/codelibs/fione>
 

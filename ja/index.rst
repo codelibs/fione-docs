@@ -46,5 +46,6 @@ Fioneのカスタマイズや導入・構築などのサポートサービスが
 
    about
    quick-start
+   tutorial
    フォーラム <https://discuss.codelibs.org/c/FioneJA>
    GitHub <https://github.com/codelibs/fione>
