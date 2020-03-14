@@ -31,8 +31,8 @@ Fione はApacheライセンスで提供され、無料 (フリーソフト) で�
 チュートリアル
 ==============
 
-- - :doc:`導入編 <tutorial/getting-started>`
-- - :doc:`Titanicデータ編 <tutorial/titanic>`
+- :doc:`導入編 <tutorial/getting-started>`
+- :doc:`Titanicデータ編 <tutorial/titanic>`
 
 
 商用サポート
