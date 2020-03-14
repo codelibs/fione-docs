@@ -34,7 +34,7 @@ Fioneで予測データ作成
 起動
 ~~~~
 
-Fioneの起動に必要な設定等は\ `前回の記事 <https://qiita.com/shinsuke_sugaya/items/338d97161d9a27bb14b8>`__\ を参照してください。
+Fioneの起動に必要な設定等は\ `前回の記事 <https://fione.codelibs.org/ja/tutorial/getting-started.html>`__\ を参照してください。
 今回は、Fione 13.6.1を利用します。
 
 ::

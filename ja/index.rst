@@ -28,6 +28,13 @@ Fione はApacheライセンスで提供され、無料 (フリーソフト) で�
 
 - 機械学習の結果の可視化
 
+チュートリアル
+==============
+
+- - :doc:`導入編 <tutorial/getting-started>`
+- - :doc:`Titanicデータ編 <tutorial/titanic>`
+
+
 商用サポート
 ============
 
