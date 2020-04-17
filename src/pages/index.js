@@ -109,7 +109,7 @@ class IndexPage extends Component {
             Fione is provided under Apache license.
             </h3>
             <Button to="/docs/getting-started/quickstart" large="true">
-              Get Started
+              Quick Start
             </Button>
             <Button to="/docs/getting-started/overview" large="true" transparent="true">
               Docs

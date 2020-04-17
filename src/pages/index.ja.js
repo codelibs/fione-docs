@@ -28,7 +28,7 @@ const Hero = styled.div`
 
   h2 {
     margin-top: 1.5rem;
-    font-size: 3.5em;
+    font-size: 2.5em;
     margin-bottom: 0.25em;
     font-weight: bold;
     letter-spacing: 1.5px;
@@ -101,17 +101,17 @@ class IndexPage extends Component {
         <Header currentPath={this.props.location.pathname} fixed="true" lang="ja"/>
         <Hero>
           <section>
-            <h2>エンタープライズ AI プラットフォーム</h2>
+            <h2>AI プラットフォーム</h2>
             <h3>
-            Fione (フィオネ) は「専門知識なくても機械学習をできるサーバー」です。
-            Dockerの実行環境があればどのOSでも実行可能です。 
-            Fione はApacheライセンスで提供され、無料 (フリーソフト) でご利用いただけます。
+            Fione (フィオネ) は、専門知識がなくても簡単に利用でき、
+            データから有用な分析や予測をできるソフトウェアです。
+            Fione はApacheライセンスで提供され、無料でご利用いただけます。
             </h3>
             <Button to="/docs/ja/getting-started/quickstart" large="true">
-              Get Started
+              クイックスタート
             </Button>
             <Button to="/docs/ja/getting-started/overview" large="true" transparent="true">
-              Docs
+              ドキュメント
             </Button>
           </section>
           <section sytle="text-align:center;">
@@ -120,22 +120,23 @@ class IndexPage extends Component {
         </Hero>
         <Philosophy>
           <div>
-            <h3>簡単</h3>
+            <h3>簡単に利用できる</h3>
             <p>
+              すべての操作はブラウザ上で行うことができます。
               Dockerの実行環境があれば、コマンド1つでFioneを起動できます。
             </p>
           </div>
           <div>
-            <h3>オープン</h3>
+            <h3>オープンな技術</h3>
             <p>
               FioneはGitHub上で開発されるオープンソースのソフトウェアです。
               OSSの開発に自由に参加して、利用することができます。
             </p>
           </div>
           <div>
-            <h3>AutoML</h3>
+            <h3>高精度な予測</h3>
             <p>
-              機械学習の専門知識がなくても利用することができます。
+              AutoMLにより、機械学習の専門知識がなくても、利用することができます。
               手持ちのデータをアップロードするだけで、機械学習の予測結果を取得できます。
             </p>
           </div>
