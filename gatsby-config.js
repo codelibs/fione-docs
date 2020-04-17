@@ -41,5 +41,11 @@ module.exports = {
         trackingId: 'UA-34667351-7',
       },
     },
+    {
+      resolve: `gatsby-plugin-google-adsense`,
+      options: {
+          publisherId: `ca-pub-0248074489415800`
+      },
+    },
   ],
 }

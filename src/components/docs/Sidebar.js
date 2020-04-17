@@ -1,4 +1,5 @@
 import React from 'react'
+import { useEffect, useState } from "react"
 import { map, keys, isEmpty } from 'lodash'
 import GithubSlugger from 'github-slugger'
 import styled from 'styled-components'
@@ -39,6 +40,39 @@ const Divider = styled.li`
   border-top: 2px dashed #f0f0f0;
 `
 
+const AdSense = ({ format = "auto" }) => {
+  const [state, setState] = useState({ showAds: false })
+
+  useEffect(() => {
+    if (state.showAds) {
+      window.adsbygoogle = window.adsbygoogle || []
+      window.adsbygoogle.push({})
+    }
+    if (window) {
+      const shouldShowAds = window.innerWidth >= 650
+      if (shouldShowAds) {
+        setState({ showAds: true })
+      }
+    }
+  }, [state.showAds])
+
+  if (!state.showAds) return null
+
+  return (
+      <Ins
+        className="adsbygoogle"
+        data-ad-client="ca-pub-0248074489415800"
+        data-ad-slot="9308613578"
+        data-ad-format={format}
+        data-full-width-responsive="true"
+      />
+  )
+}
+
+const Ins = styled.ins({
+  display: "block"
+})
+
 export default ({ headings, extras }) => {
   const slugger = new GithubSlugger()
   const mainHeaders = headings.filter(({ depth }) => depth <= 3)
@@ -62,6 +96,7 @@ export default ({ headings, extras }) => {
           </ListItem>
         ))}
       </List>
+      <AdSense />
     </Wrapper>
   )
 }
