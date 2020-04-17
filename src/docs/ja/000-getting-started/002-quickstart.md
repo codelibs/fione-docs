@@ -2,7 +2,12 @@
 title: クリックスタート
 ---
 
-今回は、定番データともいえる、irisデータ([iris.csv](https://raw.githubusercontent.com/codelibs/fione/fione-13.6.0/src/test/resources/data/iris.csv))を利用します。iris(植物のあやめ)のデータはセトナ(setosa)、バーシクル(versicolor)、 バージニカ(virginica)という3種類のあやめのどれかで、がく片長(Sepal Length)、がく片幅(Sepal Width)、花びら長(Petal Length)、花びら幅(Petal Width)の4つの属性情報から構成されます。なので、4つの属性情報だけを見て、あやめの種類を予測するモデルを作成します。
+### はじめに
+
+Fioneの使い方を説明していきます。
+定番データともいえる、irisデータ([iris.csv](https://raw.githubusercontent.com/codelibs/fione/fione-13.6.0/src/test/resources/data/iris.csv))を利用します。
+iris(植物のあやめ)のデータはセトナ(setosa)、バーシクル(versicolor)、 バージニカ(virginica)という3種類のあやめのどれかで、がく片長(Sepal Length)、がく片幅(Sepal Width)、花びら長(Petal Length)、花びら幅(Petal Width)の4つの属性情報から構成されます。
+今回は、4つの属性情報だけを見て、あやめの種類を予測するモデルを作成します。
 
 ### 事前準備
 
@@ -16,7 +21,7 @@ Fioneを実行するためには以下のソフトウェアをインストール
 GitHubからFioneのDocker環境を取得して、起動します。
 
 ```
-$ git clone https://github.com/codelibs/docker-fione.git -b v13.6.0
+$ git clone https://github.com/codelibs/docker-fione.git -b v13.6.2
 $ cd docker-fione/compose
 $ docker-compose up
 ```
@@ -109,5 +114,3 @@ $ docker volume rm fess-data es-data es-dict minio-data
 ### まとめ
 
 Fioneを利用することで、コードを書かないでも高い精度の予測モデルを取得して、予測APIの構築までできてしまうのを紹介できたと思います。AIの専門家でなくても、実用的な予測モデルを利用できるようになりますし、専門家であれば、とりあえず、Fioneで実行して、結果を見て、より良いモデルを構築するヒントを得られるかもしれません。
-
-Fioneは2019年末から開発されている新しいオープンソースのプロダクトであり、まだまだ課題や改善点があったり、拡張されていくと思います。オープンソースで自由に利用できますし、質問や要望などがあれば、[フォーラム](https://discuss.codelibs.org/c/FioneJA/)を利用することができます。

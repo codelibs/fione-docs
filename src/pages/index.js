@@ -13,7 +13,7 @@ const Hero = styled.div`
   );
   color: #fff;
   padding: 70px;
-  border-radius: 0 0 50% 50% / 4%;
+  border-radius: 0 0 50% 50% / 8%;
   display: flex;
   justify-content: space-between;
 
@@ -115,7 +115,7 @@ class IndexPage extends Component {
               Docs
             </Button>
           </section>
-          <section>
+          <section sytle="text-align:center;">
             <img src="/media/welcome.png" alt="Fione" />
           </section>
         </Hero>

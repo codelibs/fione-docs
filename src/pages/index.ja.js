@@ -13,7 +13,7 @@ const Hero = styled.div`
   );
   color: #fff;
   padding: 70px;
-  border-radius: 0 0 50% 50% / 4%;
+  border-radius: 0 0 50% 50% / 8%;
   display: flex;
   justify-content: space-between;
 
@@ -103,7 +103,7 @@ class IndexPage extends Component {
           <section>
             <h2>エンタープライズ AI プラットフォーム</h2>
             <h3>
-            Fione (フィオネ) は「5 分くらいで簡単に機械学習をできるサーバー」です。
+            Fione (フィオネ) は「専門知識なくても機械学習をできるサーバー」です。
             Dockerの実行環境があればどのOSでも実行可能です。 
             Fione はApacheライセンスで提供され、無料 (フリーソフト) でご利用いただけます。
             </h3>
@@ -114,7 +114,7 @@ class IndexPage extends Component {
               Docs
             </Button>
           </section>
-          <section>
+          <section sytle="text-align:center;">
             <img src="/media/ja/welcome.png" alt="Fione" />
           </section>
         </Hero>

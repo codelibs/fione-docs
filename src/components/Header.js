@@ -119,7 +119,7 @@ export default ({ currentPath, fixed, nav, lang }) => (
             </Link>
           </li>
           <li>
-            <a href="/github">
+            <a href="https://github.com/codelibs/fione">
               <GithubIcon />
             </a>
           </li>
@@ -156,7 +156,7 @@ export default ({ currentPath, fixed, nav, lang }) => (
             </Link>
           </li>
           <li>
-            <a href="/github">
+            <a href="https://github.com/codelibs/fione">
               <GithubIcon />
             </a>
           </li>
