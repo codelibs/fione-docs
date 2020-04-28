@@ -12,7 +12,7 @@ title: Quick Start
 First of all, start Fione with the following command:
 
 ```shell
-$ git clone https://github.com/codelibs/docker-fione.git
+$ git clone https://github.com/codelibs/docker-fione.git -b v13.6.2
 $ cd docker-fione/compose
 $ docker-compose up
 ```
