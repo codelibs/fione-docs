@@ -17,6 +17,15 @@ $ cd docker-fione/compose
 $ docker-compose up
 ```
 
+For available versions, see [Releases](https://github.com/codelibs/docker-fione/releases).
+
+If the following error occurs, refer to [Elasticsearch Guide](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#_set_vm_max_map_count_to_at_least_262144) and update your configuration.
+
+```
+es01       | [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+```
+
+
 ## Create Project
 
 Access http://localhost:8080/admin/easyml/ and login as fione user (password is fione). Type Project Name and Training Data. (for example, you can download train.csv for Titanic) Click Create button.
