@@ -21,7 +21,7 @@ Fioneを実行するためには以下のソフトウェアをインストール
 GitHubからFioneのDocker環境を取得して、起動します。
 
 ```
-$ git clone https://github.com/codelibs/docker-fione.git -b v13.6.2
+$ git clone https://github.com/codelibs/docker-fione.git -b v13.7.0
 $ cd docker-fione/compose
 $ docker-compose up
 ```
