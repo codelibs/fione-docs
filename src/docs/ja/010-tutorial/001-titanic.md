@@ -24,10 +24,10 @@ train.csvが学習用データで、test.csvはテスト用データです。テ
 
 ### 起動
 
-Fioneの起動に必要な設定等は[クリックスタート](/docs/ja/getting-started/quickstart)を参照してください。今回は、Fione 13.7.0を利用します。
+Fioneの起動に必要な設定等は[クリックスタート](/docs/ja/getting-started/quickstart)を参照してください。今回は、Fione 13.8.0を利用します。
 
 ```
-$ git clone https://github.com/codelibs/docker-fione.git -b v13.7.0
+$ git clone https://github.com/codelibs/docker-fione.git -b v13.8.0
 $ cd docker-fione/compose
 $ docker-compose up
 ```
