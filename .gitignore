@@ -1,9 +1,32 @@
-# Project dependencies
-# https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
-node_modules
-.cache/
-# Build directory
-public/
+# Dependencies
+node_modules/
+
+# VitePress build output
+.vitepress/dist/
+.vitepress/cache/
+
+# OS files
 .DS_Store
-yarn-error.log
-yarn.lock
+Thumbs.db
+
+# Python
+*.pyc
+__pycache__/
+_build/
+
+# Editor / IDE
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Serena (AI tooling)
+.serena/
+
+# Local design/spec docs (also build-excluded via srcExclude; kept local, not committed)
+/specs/
+
+# Misc
+*.log
+.cache/

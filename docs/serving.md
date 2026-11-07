@@ -1,0 +1,180 @@
+---
+title: "Fione Serving: prediction API"
+description: "Run a trained Fione model as an HTTP prediction API with the fione-serving image: the /invocations, /model and /ping endpoints, contributions and limits."
+---
+
+# Fione Serving
+
+Fione Serving is a small prediction API for one trained model. You download the model from Fione as a *serving bundle* (a zip), unpack it and run the `fione-serving` image on it. The image is the same for every model; the bundle holds only the model files.
+
+## Get the image
+
+The image is built from the Fione repository. It must be built with the **same `FIONE_IMAGE_TAG` as the `fione` image** that trained the model, because a model records that tag and the serving image refuses models of another tag.
+
+With Docker Compose, from the repository root (the tag comes from `docker/.env`, default `dev`):
+
+```sh
+docker compose -f docker/compose.yaml --env-file docker/.env --profile serving build fione-serving
+```
+
+Or with plain Docker:
+
+```sh
+docker build -f docker/Dockerfile.serving --build-arg FIONE_IMAGE_TAG=dev \
+    -t ghcr.io/codelibs/fione-serving:dev .
+```
+
+The image carries the same machine-learning libraries as Fione. Its default name, `ghcr.io/codelibs/fione-serving`, is the one the Fione UI puts in the run command (it can be changed with `FIONE_SERVING_IMAGE`, see [Configuration](/docs/configuration)).
+
+## Run a model
+
+On the model's **Prediction summary** page, the **Serve it from your own system** card offers **Download the serving bundle** and shows the command to run. For a model trained by an image tagged `dev` it reads:
+
+```sh
+docker run --rm -p 8081:8080 -v "$PWD/model:/model:ro" ghcr.io/codelibs/fione-serving:dev
+```
+
+Run it where you unpacked the bundle: the zip holds a `model/` directory with `manifest.json` and `model.joblib`.
+
+```sh
+unzip fione-serving-*.zip
+docker run --rm -p 8081:8080 -v "$PWD/model:/model:ro" ghcr.io/codelibs/fione-serving:dev
+```
+
+The API listens on port 8080 in the container (`-p 8081:8080` publishes it on 8081, on every network interface of the host). **The API has no authentication** and no rate or concurrency limit for predictions beyond the request size limits below (only requests for [contributions](#contributions) are limited in number at once). To keep it on this machine, publish it as `-p 127.0.0.1:8081:8080`, and put a reverse proxy with authentication in front of it to serve others. The process runs as a non-root user and only reads `/model`.
+
+If the model cannot be served, the container prints one line and exits with status 1, for example:
+
+```text
+ERROR: the model in /model was made for image tag 'dev', but this image is tag '9.9'; run it with the image tagged dev
+```
+
+The same bundle and command are available from the REST API: `GET /api/v1/models/{id}/serving` (the zip) and `GET /api/v1/models/{id}/serving/info` (the command and an example `curl`). See [REST API](/docs/rest-api).
+
+### With Docker Compose
+
+The Compose file has an optional `fione-serving` service, started with the `serving` profile on a model unpacked into `./model`:
+
+```sh
+FIONE_MODEL_DIR=$PWD/model docker compose -f docker/compose.yaml --env-file docker/.env \
+    --profile serving up fione-serving
+```
+
+It publishes the API on `127.0.0.1:8081` (change the port with `FIONE_SERVING_PORT`) and runs on a Compose network of its own, so a served model cannot reach Fione's storage.
+
+## API
+
+Responses are JSON. Request bodies need no particular `Content-Type`.
+
+### POST /invocations
+
+Predicts each instance. The request is `{"instances": [...]}`, one object per row with a value for every input column; extra keys are ignored.
+
+```sh
+curl -s -X POST localhost:8081/invocations -H 'Content-Type: application/json' -d '{"instances":[
+  {"sepal length (cm)":5.1,"sepal width (cm)":3.5,"petal length (cm)":1.4,"petal width (cm)":0.2},
+  {"sepal length (cm)":6.3,"sepal width (cm)":3.3,"petal length (cm)":6.0}]}'
+```
+
+The response has one prediction per instance, in order. A row that cannot be predicted gets `{"exception": "..."}` and does not fail the others. From a real run with an iris model:
+
+```json
+{"predictions":[
+  {"label":"setosa","index":0,"class_probabilities":[0.9934803442259019,0.003455065889847104,0.0030645898842508773]},
+  {"exception":"missing columns: ['petal width (cm)']"}]}
+```
+
+- Classification (two or more classes): `label` (the predicted class), `index` (its position in the class list of `GET /model`) and `class_probabilities` (in that order).
+- Regression: `{"value": 12.3}`.
+- A number column given text that is not a number, a missing column or a row that is not an object: `{"exception": "..."}` for that row.
+
+Errors that refuse the whole request answer `{"error": "..."}`:
+
+| Status | When |
+|---|---|
+| 400 | The body is not JSON (or holds `NaN` / `Infinity`), is not an object, has no `instances` list, or has a `contributions` value that is not `true`, `false` or `null`. |
+| 413 | The body is larger than `FIONE_SERVING_MAX_BODY` (10 MiB), has more than `FIONE_SERVING_MAX_INSTANCES` (10,000) instances, or asks for contributions for more than `FIONE_SERVING_MAX_CONTRIBUTION_INSTANCES` (100). |
+| 422 | Contributions were asked for a model with so many classes and columns that fewer instances (or none) are allowed. |
+| 503 | Too many requests for contributions are running; the response has `Retry-After: 1`. |
+
+The limits can be changed (see [Settings of the serving image](#settings-of-the-serving-image)).
+
+#### Contributions
+
+Add `"contributions": true` to the request to get, for each predicted row, how much each input column moved the prediction away from the model's average prediction (`bias`):
+
+```sh
+curl -s -X POST localhost:8081/invocations -H 'Content-Type: application/json' -d '{"instances":[
+  {"sepal length (cm)":5.1,"sepal width (cm)":3.5,"petal length (cm)":1.4,"petal width (cm)":0.2},
+  {"sepal length (cm)":6.3,"sepal width (cm)":3.3,"petal length (cm)":6.0}],
+  "contributions":true}'
+```
+
+Each predicted row keeps its usual keys and gains `contributions` last; a row that cannot be predicted stays `{"exception": "..."}`. From a real run with an iris model of another training (so its probabilities differ from the example above):
+
+```json
+{"predictions":[
+  {"label":"setosa","index":0,"class_probabilities":[0.9958831248710637,0.0024227084186831337,0.0016941667102532],
+   "contributions":{"bias":0.3770290408942638,"columns":{"sepal length (cm)":0.08218648759824686,
+     "sepal width (cm)":0.12263535619818028,"petal length (cm)":0.20102939560338035,"petal width (cm)":0.21300284457699228}}},
+  {"exception":"missing columns: ['petal width (cm)']"}]}
+```
+
+- `bias` plus the values in `columns` adds up to the output explained:
+  - two classes: the probability of the second class, `class_probabilities[1]`;
+  - more classes: the probability of the predicted class, `class_probabilities[index]`;
+  - regression: `value`.
+- `columns` has one entry per input column, in the order of `GET /model`'s `names`. The bias is kept outside it, so an input column named `bias` cannot clash with it.
+- The values are approximate: the model combines several models, and their contributions are combined too. They add up to the output (to rounding).
+- Contributions cost much more than a prediction. One request takes at most 100 instances (413 beyond that), and a model with very many classes and columns takes fewer (422). At most 2 such requests run at once; another one gets 503 with `Retry-After: 1` straight away. Both numbers can be changed (see below).
+- Plain predictions wait while a contribution request computes, because the model answers one call at a time. The instance cap is the lever: a lower `FIONE_SERVING_MAX_CONTRIBUTION_INSTANCES` shortens each wait.
+- `"contributions"` must be `true`, `false` or `null` (400 otherwise). Without it, or with `false` or `null`, the response has no `contributions` key.
+
+### GET /model
+
+What the model expects and predicts. From the same iris model:
+
+```json
+{"names":["sepal length (cm)","sepal width (cm)","petal length (cm)","petal width (cm)","species"],
+ "domains":[null,null,null,null,["setosa","versicolor","virginica"]],
+ "responseColumn":"species","category":"Multinomial","nclasses":3,"nfeatures":4,
+ "uuid":"bae3b2e75a8474233aab6ce1ad9163b8",
+ "instance":{"sepal length (cm)":"?","sepal width (cm)":"?","petal length (cm)":"?","petal width (cm)":"?"},
+ "engine":"fione","fioneVersion":"20.0.0"}
+```
+
+| Field | Meaning |
+|---|---|
+| `names` | The input columns, then the column to predict. |
+| `domains` | Per name, the known categories of a category column (`null` for numbers, or for more than 1,000 categories); last, the classes (`null` for regression). |
+| `responseColumn` | The column to predict. |
+| `category` | `Binomial` (two classes), `Multinomial` (more) or `Regression`. |
+| `nclasses` | The number of classes (`1` for regression). |
+| `nfeatures` | The number of input columns. |
+| `uuid` | The first 32 hex digits of the model file's SHA-256. |
+| `instance` | A template request row. |
+| `engine`, `fioneVersion` | `fione` and the Fione version that trained the model. |
+
+### GET /ping and GET /
+
+An empty `200` response while the server runs. The image's Docker health check uses `/ping`. Fione Serving has no `/health` endpoint; `/api/v1/health` belongs to the Fione server.
+
+## Model files and trust
+
+A model is `model.joblib` (a joblib pickle of Fione's model classes) plus `manifest.json` (the image tag, the Fione version, the task, the target and the SHA-256 of each file). Inside Fione the manifest is also signed with the install's secret key, and Fione only loads models whose signature verifies.
+
+Fione Serving cannot check that signature (it has no secret). It checks that the image tag matches and that every file matches its recorded SHA-256, then unpickles the model. **Loading a pickle runs code**: only serve bundles you downloaded from your own Fione. The same applies to model imports in Fione, which only administrators can do: importing a file that was not signed by this install needs the explicit *trust* option, which means "I vouch for this file"; the model is then shown as of unverified origin.
+
+## Settings of the serving image
+
+| Variable | Default | What it does |
+|---|---|---|
+| `FIONE_MODEL_DIR` | `/model` | The model directory. |
+| `FIONE_IMAGE_TAG` | the image's tag | Must equal the model's tag (set at build time). |
+| `FIONE_SERVING_MAX_BODY` | `10485760` | The largest request body in bytes. |
+| `FIONE_SERVING_MAX_INSTANCES` | `10000` | The most instances per request. |
+| `FIONE_SERVING_MAX_CONTRIBUTION_INSTANCES` | `100` | The most instances per request with `"contributions": true`. |
+| `FIONE_SERVING_MAX_CONTRIBUTION_REQUESTS` | `2` | How many requests with contributions may run at once; more get 503. |
+| `PORT` | `8080` | The port inside the container. |
+
+Pass them to `docker run` with `-e`, for example `-e FIONE_SERVING_MAX_INSTANCES=1000`. One prediction runs at a time per container (the libraries use several CPU cores). A request with contributions computes them in the same turn as its predictions, so plain predictions wait while it runs. All settings are listed in [Configuration](/docs/configuration).
