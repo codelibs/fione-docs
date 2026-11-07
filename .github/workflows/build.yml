@@ -1,11 +1,11 @@
 # Build gate for the documentation site.
 #
-# The site is deployed by copying `.vitepress/dist/` to the web server by hand,
-# so a broken `main` does not publish itself — but nothing else checks a pull
-# request either, and the two failures below are both invisible until someone
-# runs the commands locally. `docs:check-anchors` in particular is a separate
-# command that the build does not imply, and `main` has carried four broken
-# heading anchors because of that.
+# The site is built and published by a Jenkins job that copies `.vitepress/dist/`
+# to the web server. Nothing else checks a pull request, and the two failures
+# below are both invisible until someone runs the commands locally.
+# `docs:check-anchors` in particular is a separate command that the build does
+# not imply: a broken heading anchor still builds and opens the page, it just
+# never scrolls.
 #
 # This gate checks that the site *works* — it compiles, and every internal link
 # and #fragment resolves. It deliberately does not check what any page says:

@@ -88,3 +88,9 @@
   color: var(--vp-c-brand-1);
   font-weight: 600;
 }
+
+/* Screenshots inside a paragraph of their own */
+.vp-doc p > img:only-child {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+}

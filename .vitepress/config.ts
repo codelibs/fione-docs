@@ -79,6 +79,25 @@ function homeJsonLd(isJa: boolean) {
     ],
   }
 }
+function articleJsonLd(o: {
+  title: string
+  desc: string
+  url: string
+  isJa: boolean
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: o.title,
+    description: o.desc,
+    inLanguage: o.isJa ? 'ja-JP' : 'en-US',
+    url: o.url,
+    image: OG_IMAGE,
+    author: orgNode(),
+    publisher: orgNode(),
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Version directories
 // ---------------------------------------------------------------------------
