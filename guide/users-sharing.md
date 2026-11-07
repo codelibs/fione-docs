@@ -17,7 +17,7 @@ Every user has one of three roles, set by an administrator.
 | **Editor** | Creates projects. In the projects they own or that are shared with them as **Can edit**, uploads data, trains models and predicts. |
 | **Viewer** | Looks at the projects shared with them, without changing anything. Cannot create projects. |
 
-The same text is shown to each person on the **Account** page, under "What each role can do".
+A shorter version is shown to each person on the **Account** page, under "What each role can do".
 
 ## Project access
 
@@ -65,6 +65,7 @@ Fione protects itself from lock-outs and from orphaned data. It refuses to:
 
 - remove or demote the last administrator: make someone else an administrator first;
 - let you give up your own administrator role, or delete your own account: another administrator has to do it;
+- set a new password for yourself on this page: use your own **Account** page;
 - delete a user who still owns projects or jobs: delete those first. An administrator can delete any project with **Delete project** on the project's page.
 
 ## Share a project

@@ -34,7 +34,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 
 `down -v` を付けると、ボリュームが削除され、すべてのプロジェクト・モデル・ユーザーも消えます。最初からやり直すとき以外は、`-v` を付けないでください。
 
-コンテナは、停止していなければ自動で再起動する設定です。Docker やマシンを再起動したときも、元に戻ります。
+`fione` と SeaweedFS のコンテナ (Ollama のプロファイルを使う場合は Ollama も) は、停止していなければ自動で再起動する設定です。Docker やマシンを再起動したときも、元に戻ります。
 
 ## バックアップ
 
@@ -69,13 +69,14 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 Fione 20 の新しい版へアップグレードする手順です。
 
 1. 上記の手順でバックアップします。
-2. 現在のサービング用イメージに別の名前を付けて残します。再ビルドすると `ghcr.io/codelibs/fione-serving:dev` が置き換わりますが、古いイメージがまだ必要になることがあります(後述)。
-3. 新しい版を取得して、再ビルドします。
+2. 現在のサービング用イメージに別の名前を付けて残します。サービング用イメージを再ビルドすると `ghcr.io/codelibs/fione-serving:dev` が置き換わりますが、古いイメージがまだ必要になることがあります(後述)。
+3. 新しい版を取得して、Fione とサービング用イメージを再ビルドします。
 
 ```sh
 docker tag ghcr.io/codelibs/fione-serving:dev fione-serving:before-upgrade
 git pull
 docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wait
+docker compose -f docker/compose.yaml --env-file docker/.env --profile serving build fione-serving
 ```
 
 データはそのまま残ります。アップグレード後は、管理者がアカウントのメニューの**システムの状態**ページで、**バージョン**と**イメージタグ**を確認できます。

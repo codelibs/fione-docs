@@ -97,7 +97,7 @@ How to read explanations is in [Model explanations](/guide/explanations).
 
 ## The assistant and MCP {#assistant-and-mcp}
 
-See [The assistant](/docs/assistant) for how it works.
+See [Assistant setup and MCP](/docs/assistant) for how it works.
 
 - **Answers can be wrong.** The default model is small. Check results you rely on; a training it suggests runs only after a person confirms it.
 - **Names, statistics and cell values reach the language model server.** Dataset and column names, statistics and example values (the most frequent values of a column, class labels, job messages) are sent with each question to the configured model; MCP clients never receive example values. A server outside this machine needs an administrator's one-time consent, and every chat user is warned.

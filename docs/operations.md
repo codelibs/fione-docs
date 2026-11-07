@@ -34,7 +34,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 
 `down -v` would delete the volumes, and with them every project, model and user. Do not use `-v` unless you mean to start from nothing.
 
-The containers are set to restart unless they were stopped, so they come back when Docker or the machine restarts.
+The `fione` and SeaweedFS containers (and Ollama, when you use that profile) are set to restart unless they were stopped, so they come back when Docker or the machine restarts.
 
 ## Back up
 
@@ -69,13 +69,14 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 To upgrade to a newer version of Fione 20:
 
 1. Back up, as above.
-2. Keep the current serving image under another name. The rebuild replaces `ghcr.io/codelibs/fione-serving:dev`, and you may still need the old one (see below).
-3. Get the new version and rebuild:
+2. Keep the current serving image under another name. Rebuilding the serving image replaces `ghcr.io/codelibs/fione-serving:dev`, and you may still need the old one (see below).
+3. Get the new version and rebuild Fione and the serving image:
 
 ```sh
 docker tag ghcr.io/codelibs/fione-serving:dev fione-serving:before-upgrade
 git pull
 docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wait
+docker compose -f docker/compose.yaml --env-file docker/.env --profile serving build fione-serving
 ```
 
 Your data stays. Afterwards, an administrator can check the **Version** and **Image tag** on the **System status** page (account menu).

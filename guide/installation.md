@@ -12,7 +12,7 @@ This page takes you from nothing to a running Fione with an administrator accoun
 - Docker with Compose v2 (Docker Desktop, or Docker Engine with the compose plugin).
 - About 6 GB of disk space for the images and their build cache, plus room for your data.
 - `git`, `openssl`, `unzip` and `curl`.
-- A recent browser: Chrome or Edge 123+, Firefox 120+ or Safari 17.5+ (older ones get the light theme only).
+- A current browser. Dark mode needs Chrome or Edge 123+, Firefox 120+ or Safari 17.5+; older ones get the light theme only.
 
 The images are built on your machine from the Fione repository, on amd64 or arm64 (Apple silicon).
 
@@ -52,7 +52,7 @@ Open <http://127.0.0.1:8080/>. The page **Create the administrator account** ask
 
 Press **Create administrator** and you are signed in.
 
-Do this soon after the first start: until an administrator exists, anyone who can read the log can do it. If you prefer to choose the token yourself, set `FIONE_SETUP_TOKEN` (16 characters or more) in `docker/.env` before starting. The token stops working once an administrator exists.
+Do this soon after the first start: until an administrator exists, anyone who can read the log can do it. If you prefer to choose the token yourself, set `FIONE_SETUP_TOKEN` (16 characters or more) in `docker/.env` before starting. Fione then does not print a token in its log, so the `grep` above finds nothing. The token stops working once an administrator exists.
 
 Afterwards, people sign in on the login page with their username and password. An administrator adds the other users; see [Users and sharing](/guide/users-sharing).
 

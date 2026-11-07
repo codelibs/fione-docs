@@ -64,7 +64,7 @@ Each question goes to the language model server together with the conversation s
 
 An automatic comment is sent the same way on the first view of its page by any member of the project, without a question: the column names, statistics and example values it reads go to the same model host. The data files themselves are never sent. Everything goes to the configured model server; Claude, and an Ollama on another machine, need an administrator's one-time consent first. MCP clients never receive example values (see [MCP](#mcp)).
 
-With Claude, or an Ollama on another machine, the **Assistant** page and every assistant's comment show a warning with the host name. `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` of the Fione server apply to this traffic.
+With Claude, or an Ollama on another machine, the **Assistant** page and every assistant's comment show a warning with the host name. `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` and `NO_PROXY` of the Fione server apply to this traffic.
 
 Conversations are private: only their creator sees them, administrators included, and a person needs read access to the project to open their own. They are stored unencrypted in Fione's database and deleted with their project or user.
 

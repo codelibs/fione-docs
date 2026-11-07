@@ -4,11 +4,6 @@
   --vp-c-brand-3: #2f54c8;
 }
 
-/* Hide site title text, show logo only */
-.VPNavBarTitle .title {
-  display: none;
-}
-
 /* Constrain hero image size on home page */
 .vp-doc .hero img {
   max-width: 450px;

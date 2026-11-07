@@ -1,7 +1,7 @@
 ---
 layout: home
 title: Fione
-description: Fione はオープンソースの AutoML サーバーです。CSV をアップロードしてモデルを学習し、予測し、docker compose up だけで予測 API として提供できます。
+description: Fione はオープンソースの AutoML サーバーです。CSV をアップロードしてモデルを学習し、予測し、予測 API として提供できます。Fione 自体は docker compose up だけで起動します。
 
 hero:
   name: Fione
@@ -29,7 +29,7 @@ features:
   - title: モデルを説明できる
     details: 診断情報、列の重要度、部分依存、予測ごとの理由を表示し、答えを漏らしている列には警告を出します。
   - title: どこでもモデルを提供
-    details: Fione Serving は、学習したモデルを提供する小さな予測 API です。共通の Docker イメージとモデルファイルだけで動きます。
+    details: Fione Serving は、学習したモデルを提供する小さな予測 API です。Docker イメージを一度ビルドすれば、あとはモデルファイルだけで動きます。
   - title: ユーザー、共有、API
     details: 管理者・編集者・閲覧者、ユーザー単位のプロジェクト共有、API トークン、REST API、Python クライアント fione-sdk を備えています。
   - title: 読み取り専用のアシスタント

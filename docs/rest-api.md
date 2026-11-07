@@ -5,7 +5,7 @@ description: "Fione's REST API under /api/v1: authenticate with API tokens, then
 
 # REST API reference
 
-Everything the web app does goes through a JSON REST API under `/api/v1`, and scripts can use it too. This page explains how to authenticate and the shape of requests, responses and errors, and lists the endpoints by resource, with a few worked `curl` examples. If you work in Python, the [Python client](/guide/sdk) wraps the most common calls.
+Most of what the web app does is also available through a JSON REST API under `/api/v1`, so scripts can use it too. This page explains how to authenticate and the shape of requests, responses and errors, and lists the endpoints by resource, with a few worked `curl` examples. If you work in Python, the [Python client](/guide/sdk) wraps the most common calls.
 
 The examples assume Fione at `http://localhost:8080` and an API token in `<your-token>`.
 
@@ -279,12 +279,13 @@ An error response is always JSON with a human-readable `error` and a stable `cod
 | `401` | `unauthorized` | No token, or an invalid or revoked one. Wrong sign-in details are `invalid_credentials`. |
 | `403` | `forbidden` | You can see the project but lack the role or access the call needs. Also `csrf` for a cookie request without its CSRF token, `cross_origin` for a foreign `Origin`, `invalid_setup_token` for a wrong setup token, and `invalid_credentials` for a wrong current password in `POST /auth/password`. |
 | `404` | `not_found` | The object does not exist, or you cannot read its project. |
+| `405` | `method_not_allowed` | The path exists but not for this HTTP method. |
 | `409` | `conflict` | The change is not possible now: a last administrator, a job that already finished, an export already running. Also `already_set_up`, `untrusted` and `too_large` for explanations. |
 | `413` | `too_large` | The request body or upload is over its limit. |
-| `415` | `unsupported_media_type` | Wrong `Content-Type`: JSON for most calls, `multipart/form-data` for uploads. |
+| `415` | `unsupported_media_type` | Wrong `Content-Type` on sign-in or first-administrator setup (JSON is required) or on an upload (`multipart/form-data` is required). Other JSON calls with a wrong `Content-Type` answer `422 invalid`. |
 | `422` | `invalid` | A field is missing or wrong, or the service refused the value. A CSV that cannot be read is `invalid_csv`. |
 | `429` | `throttled` | Too many failed password checks. Wait for the number of seconds in the `Retry-After` header. |
 | `500` | `internal` | An unexpected error. Details are in the server log, not in the response. |
 | `503` | `busy` | Another explanation is being computed. Retry after the `Retry-After` header. |
 
-For the sign-in limits, see [Users, roles and sharing](/guide/users-sharing) and [Configuration](/docs/configuration).
+The table lists the common statuses; some calls add their own `code` to a status (for example `untrusted` on a model import is `422`). For the sign-in limits, see [Users, roles and sharing](/guide/users-sharing) and [Configuration](/docs/configuration).

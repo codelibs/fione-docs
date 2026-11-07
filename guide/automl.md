@@ -44,8 +44,8 @@ Fione detects what each column holds, which decides how it is shown and which co
 | Kind | What it means |
 |---|---|
 | Number | Numbers, including whole numbers that are not codes or IDs. |
-| Category | True/false, small whole-number codes (at most 10 different values, and no more than 5% of the number of rows), and text with few different values (at most 50, or at most half as many as there are rows). |
-| Text | Text that is not a Category and either averages more than 30 characters or has more than 1,000 different values. |
+| Category | True/false, small whole-number codes (at most 10 different values, and no more than 5% of the number of rows), and text with few different values (at most 50, or at most half as many as there are rows; when the values average 30 characters or fewer, up to 1,000 different values). |
+| Text | Text that is not a Category and averages more than 30 characters or has more than 1,000 different values. |
 | Date | Date types, and text where at least 95% of the values read as dates and at least half show a year, a month name or a time. |
 | ID-like | A whole-number or text column in which every value is different (at least 20 values). It cannot help to predict. |
 | One value | The same value in every row. It cannot help to predict. |

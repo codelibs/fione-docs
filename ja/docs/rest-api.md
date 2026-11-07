@@ -5,7 +5,7 @@ description: Fione の /api/v1 REST API。API トークンで認証し、プロ�
 
 # REST API リファレンス
 
-Web アプリの操作はすべて `/api/v1` の JSON REST API を通して行われており、スクリプトからも同じ API を使えます。このページでは、認証の方法、リクエスト・レスポンス・エラーの形、リソースごとのエンドポイント一覧、`curl` の実例を説明します。Python を使う場合は、[Python クライアント](/ja/guide/sdk)が主な呼び出しをラップしています。
+Web アプリでできる操作の大半は、`/api/v1` の JSON REST API からも行えるので、スクリプトから使えます。このページでは、認証の方法、リクエスト・レスポンス・エラーの形、リソースごとのエンドポイント一覧、`curl` の実例を説明します。Python を使う場合は、[Python クライアント](/ja/guide/sdk)が主な呼び出しをラップしています。
 
 例では、Fione が `http://localhost:8080` にあり、API トークンを `<your-token>` と表記します。
 
@@ -279,12 +279,13 @@ curl -X POST http://localhost:8080/api/v1/models/1/contributions \
 | `401` | `unauthorized` | トークンがない、または無効・取り消し済みです。ログイン情報の誤りは `invalid_credentials` です。 |
 | `403` | `forbidden` | プロジェクトは見られるが、呼び出しに必要なロールや権限がありません。ほかに、CSRF トークンのない Cookie リクエストの `csrf`、ほかのサイトの `Origin` の `cross_origin`、セットアップトークンの誤りの `invalid_setup_token`、`POST /auth/password` で現在のパスワードが違う場合の `invalid_credentials` があります。 |
 | `404` | `not_found` | オブジェクトが存在しないか、そのプロジェクトを読めません。 |
+| `405` | `method_not_allowed` | そのパスはありますが、この HTTP メソッドでは使えません。 |
 | `409` | `conflict` | 今はその変更ができません（最後の管理者、終了済みのジョブ、実行中のエクスポートなど）。ほかに `already_set_up`、説明での `untrusted`、`too_large` があります。 |
 | `413` | `too_large` | リクエスト本文やアップロードが上限を超えています。 |
-| `415` | `unsupported_media_type` | `Content-Type` が違います。ほとんどの呼び出しは JSON、アップロードは `multipart/form-data` です。 |
+| `415` | `unsupported_media_type` | サインインまたは最初の管理者の作成で `Content-Type` が JSON でない場合、またはアップロードで `multipart/form-data` でない場合です。そのほかの JSON の呼び出しで `Content-Type` が違うときは `422 invalid` が返ります。 |
 | `422` | `invalid` | フィールドが不足または不正、あるいはサービスが値を拒否しました。読み取れない CSV は `invalid_csv` です。 |
 | `429` | `throttled` | パスワードの確認の失敗が多すぎます。`Retry-After` ヘッダーの秒数だけ待ってください。 |
 | `500` | `internal` | 想定外のエラーです。詳細はレスポンスではなく、サーバーのログにあります。 |
 | `503` | `busy` | ほかの説明を計算中です。`Retry-After` ヘッダーの後で再試行してください。 |
 
-ログインの制限については、[ユーザー・ロール・共有](/ja/guide/users-sharing)と[設定リファレンス](/ja/docs/configuration)を参照してください。
+この表は代表的なステータスです。呼び出しによっては、ステータスに独自の `code` が付きます(たとえばモデルのインポートでの `untrusted` は `422` です)。ログインの制限については、[ユーザー・ロール・共有](/ja/guide/users-sharing)と[設定リファレンス](/ja/docs/configuration)を参照してください。
