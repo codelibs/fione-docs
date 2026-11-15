@@ -26,6 +26,7 @@ You do not need machine-learning experience to get a first model. The **EasyML w
 - **Python modules.** Data operations such as built-in frame operations, k-means and low-rank factorization; administrators can upload their own. See [Python modules](/guide/python-modules).
 - **Python client.** `fione-sdk` drives Fione from your own scripts and notebooks. See [Python client (fione-sdk)](/guide/sdk).
 - **Assistant.** Answers questions about a project's datasets and models and suggests a training run that a person confirms. See [Assistant](/guide/assistant).
+- **Claude and other MCP clients.** Claude Code or Claude Desktop can upload a CSV, train, wait for the job, read the leaderboard and predict through Fione's MCP endpoint. See [Run the AutoML loop from Claude with MCP](/guide/mcp).
 - **Storage.** Datasets and models live on SeaweedFS or any S3-compatible service; metadata is kept in SQLite.
 - English and Japanese, light and dark themes, usable on phones.
 
@@ -51,5 +52,5 @@ serving bundle (zip) ──► fione-serving ──► POST /invocations
 1. [Installation](/guide/installation): start Fione, create the administrator and get a sample CSV.
 2. [EasyML wizard](/guide/easyml): train a model, make predictions and serve the model.
 3. [AutoML screens](/guide/automl) and [Explanations and leak warnings](/guide/explanations): the detailed view.
-4. [Users and sharing](/guide/users-sharing), [Python modules](/guide/python-modules), [Python client (fione-sdk)](/guide/sdk) and [Assistant](/guide/assistant).
+4. [Users and sharing](/guide/users-sharing), [Python modules](/guide/python-modules), [Python client (fione-sdk)](/guide/sdk), [Assistant](/guide/assistant) and [Claude with MCP](/guide/mcp).
 5. For operators: [Configuration](/docs/configuration), [Operations](/docs/operations), [Fione Serving](/docs/serving) and [Known limitations](/docs/known-limitations).

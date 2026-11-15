@@ -136,6 +136,7 @@ function guideSidebar(lang: 'en' | 'ja'): DefaultTheme.SidebarItem[] {
         { text: t('Python modules', 'Python モジュール'), link: `${p}/python-modules` },
         { text: t('Python client (fione-sdk)', 'Python クライアント (fione-sdk)'), link: `${p}/sdk` },
         { text: t('The assistant', 'アシスタント'), link: `${p}/assistant` },
+        { text: t('Working with Claude (MCP)', 'Claude と使う (MCP)'), link: `${p}/mcp` },
       ],
     },
   ]

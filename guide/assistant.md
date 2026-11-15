@@ -9,7 +9,7 @@ The assistant answers questions about a project's datasets and models in plain l
 
 The assistant reads, and only reads. It cannot start a training, change a dataset or delete anything. A training it suggests starts only when someone who can edit the project presses the button on the suggestion.
 
-Before it can answer, an administrator has to connect a language model. That setup, what is sent to the model and the optional MCP endpoint are described in [Assistant setup, privacy and MCP](/docs/assistant).
+Before it can answer, an administrator has to connect a language model. That setup, what is sent to the model and the optional MCP endpoint are described in [Assistant setup, privacy and MCP](/docs/assistant). To drive Fione from Claude Code or Claude Desktop instead, see [Run the AutoML loop from Claude with MCP](/guide/mcp).
 
 ## The first start
 

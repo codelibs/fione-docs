@@ -48,7 +48,7 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LOGIN_MAX_FAILURES_PER_IP` | `50` | 期間内に、ユーザー名に関係なくクライアントアドレスごとにパスワード確認が失敗できる回数。 | [リバースプロキシの背後で使う](#リバースプロキシの背後で使う)を参照。 |
 | `FIONE_TRUST_PROXY` | `false` | クライアントアドレスとホストを `X-Forwarded-For` / `X-Forwarded-Host` から取ります (最後の値、つまりプロキシが追加した値)。 | これらのヘッダーを付けるリバースプロキシの背後でのみ `true`。 |
 | `FIONE_SETUP_TOKEN` | 未設定 | 最初の管理者を作成するトークン (16 文字以上)。未設定のときは Fione が生成し、管理者ができるまで起動のたびにログへ出力します。 | 自分で決めたいとき (`docker/.env`)。 |
-| `FIONE_PUBLIC_URL` | 未設定 | ブラウザから見た Fione 自身のオリジン (`scheme://host[:port]`、パスなし)。例: `https://fione.example.com`。MCP エンドポイントは、ブラウザからのリクエスト (`Origin`) をこのオリジンと `localhost` からのものだけ受け付けます。 | ブラウザ上の MCP クライアントが別のアドレスで Fione に接続するとき。TLS プロキシの背後では `https` のオリジンを指定してください。Fione には分かりません。 |
+| `FIONE_PUBLIC_URL` | 未設定 | ブラウザから見た Fione 自身のオリジン (`scheme://host[:port]`、パスなし)。例: `https://fione.example.com`。MCP エンドポイントは、ブラウザからのリクエスト (`Origin`) をこのオリジンと `localhost` からのものだけ受け付けます。 | ブラウザ上の MCP クライアントが別のアドレスで Fione に接続するとき。TLS プロキシの背後では `https` のオリジンを指定してください。Fione には分かりません。また、MCP クライアントが受け取る一度だけのアップロード URL (`create_upload_url`) のアドレスにもなります。未設定のときはリクエストの `Host` が使われ (`FIONE_TRUST_PROXY` の影響は受けません)、リバースプロキシが内部の名前に書き換えていることがよくあります。 |
 
 ### アシスタント (言語モデル) と MCP
 
@@ -67,7 +67,8 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LLM_MAX_TOOL_ROUNDS` | `6` | 1 つの答えがツールを呼べる回数。超えると「手順が多すぎる」として止まります。1〜20。 | 調べる回数が多い質問のとき。 |
 | `FIONE_LLM_TURN_TIMEOUT_SECS` | `180` | 1 つの答えにかけられる時間 (ツールの全ラウンドを含む)。超えるとタイムアウトで終わります。10〜1800。 | モデルやハードウェアが遅いとき。 |
 | `FIONE_LLM_MAX_CONCURRENT_TURNS` | `2` | 全ユーザー合計で同時に書く答えの数。超えた分は待ち行列に入ります。1〜16。 | 並列リクエストを処理できるサーバーのとき。 |
-| `FIONE_MCP_ENABLED` | `false` | アシスタントの読み取り専用ツールを、Fione 自身のポートの `/mcp` で MCP として提供します (Streamable HTTP、POST 上の JSON-RPC、ステートレス)。クライアントには `Authorization: Bearer` の API トークンが必要で、セッション Cookie は拒否されます。 | MCP クライアントにプロジェクトを読ませたいときは `true`。 |
+| `FIONE_MCP_ENABLED` | `false` | アシスタントの読み取り専用ツールを、Fione 自身のポートの `/mcp` で MCP として提供します (Streamable HTTP、POST 上の JSON-RPC、ステートレス)。クライアントには `Authorization: Bearer` の API トークンが必要で、セッション Cookie は拒否されます。トークンのユーザーが読めるプロジェクトの読み取り専用ツールを一覧・呼び出しでき、データセットの値の例は受け取りません。これだけでは、何かを開始・変更・削除することはできません。 | MCP クライアントにプロジェクトを読ませたいときは `true`。 |
+| `FIONE_MCP_WRITE_ENABLED` | `false` | `FIONE_MCP_ENABLED` に加えて、MCP クライアントに次のツールを提供します。プロジェクトを作る (`create_project`)、データセットを追加する (`upload_dataset`、`create_upload_url`)、学習 (`start_training`)・予測 (`start_batch_predict`)・モジュール実行 (`run_module`) を積む、行をすぐに予測する (`predict`)、ジョブをキャンセルする (`cancel_job`)、そしてそれに続く `list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`get_predictions` です。トークンのユーザーとして動作します。プロジェクトの作成には編集者または管理者のロールが必要です。アップロード、ジョブを積むこと、キャンセルには、REST API と同じくプロジェクトへの書き込み権限が必要です。`list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`predict`、`get_predictions` は読み取り権限だけで使えます。何も削除しません。 | Claude Code などの MCP クライアントにジョブを開始させたいときは `true`。[MCP で Claude から AutoML を一通り実行する](/ja/guide/mcp)を参照。 |
 
 設定ではない固定の上限: モデルのインポートファイルは 512 MiB まで、アップロードする Python モジュールは 256 KiB までです。
 
@@ -91,6 +92,7 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LLM_API_KEY` | `claude` のとき | Fione に渡されます (上記参照)。 |
 | `FIONE_LLM_AUTO_PULL` | いいえ | Fione に渡されます (既定は `false`。ボタンを押す人がいない `ollama` プロファイルでは `true` にします)。 |
 | `FIONE_MCP_ENABLED` | いいえ | Fione に渡されます (既定は `false`、上記参照)。 |
+| `FIONE_MCP_WRITE_ENABLED` | いいえ | Fione に渡されます (既定は `false`、上記参照)。 |
 | `COMPOSE_PROFILES` | いいえ | Docker Compose 自身の変数。`ollama` を指定すると Compose 内で Ollama サーバーを起動します ([アシスタントの設定と MCP](/ja/docs/assistant)を参照)。 |
 
 `FIONE_S3_ACCESS_KEY` または `FIONE_S3_SECRET_KEY` が空のままだと、Compose は起動を拒否します。この 2 つの S3 の値に使える文字は `A-Z a-z 0-9 / + = . _ -` だけで、それ以外だと SeaweedFS が起動を拒否します。
