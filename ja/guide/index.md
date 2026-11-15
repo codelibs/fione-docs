@@ -26,6 +26,7 @@ Fione はオープンソースの AutoML サーバーです。ブラウザで CS
 - **Python モジュール**: フレーム操作、k-means、低ランク分解などのデータ操作。管理者は独自のモジュールをアップロードできます。詳しくは [Python モジュール](/ja/guide/python-modules) をご覧ください。
 - **Python クライアント**: `fione-sdk` で、自分のスクリプトやノートブックから Fione を操作できます。詳しくは [Python クライアント (fione-sdk)](/ja/guide/sdk) をご覧ください。
 - **アシスタント**: プロジェクトのデータセットやモデルについての質問に答え、人が確認する学習を提案します。詳しくは [アシスタント](/ja/guide/assistant) をご覧ください。
+- **Claude などの MCP クライアント**: Claude Code や Claude Desktop が、Fione の MCP エンドポイントを通して、CSV のアップロード、学習、ジョブの待機、リーダーボードの確認、予測を行えます。詳しくは [MCP で Claude から AutoML を一通り実行する](/ja/guide/mcp) をご覧ください。
 - **ストレージ**: データセットとモデルは SeaweedFS または S3 互換のサービスに保存し、メタデータは SQLite に保存します。
 - 日本語と英語、ライトテーマとダークテーマに対応し、スマートフォンでも使えます。
 
@@ -51,5 +52,5 @@ Fione は、Docker Compose で起動するいくつかの部品でできてい�
 1. [インストール](/ja/guide/installation): Fione を起動し、管理者を作成して、サンプルの CSV を用意します。
 2. [EasyML ウィザード](/ja/guide/easyml): モデルを学習し、予測して、モデルを公開します。
 3. [AutoML 画面](/ja/guide/automl) と [説明とリーク警告](/ja/guide/explanations): 詳細表示の使い方です。
-4. [ユーザーと共有](/ja/guide/users-sharing)、[Python モジュール](/ja/guide/python-modules)、[Python クライアント (fione-sdk)](/ja/guide/sdk)、[アシスタント](/ja/guide/assistant)。
+4. [ユーザーと共有](/ja/guide/users-sharing)、[Python モジュール](/ja/guide/python-modules)、[Python クライアント (fione-sdk)](/ja/guide/sdk)、[アシスタント](/ja/guide/assistant)、[Claude と MCP](/ja/guide/mcp)。
 5. 運用する方へ: [設定](/ja/docs/configuration)、[運用](/ja/docs/operations)、[Fione Serving](/ja/docs/serving)、[既知の制限](/ja/docs/known-limitations)。
