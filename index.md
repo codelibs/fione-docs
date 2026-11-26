@@ -1,12 +1,12 @@
 ---
 layout: home
 title: Fione
-description: "Open-source AutoML server: train a model from a CSV and use its predictions from AI tools such as Claude and Codex, your own service or the browser."
+description: "Open-source AutoML server: train a model from a CSV and use its predictions from AI tools such as Claude Code or Codex, your own service or the browser."
 
 hero:
   name: Fione
   text: Predictions your AI can use
-  tagline: An open-source AutoML server you run yourself. Train a model from a CSV, then predict from AI tools such as Claude and Codex, from your own service through the API, or in the browser. No machine-learning expertise needed.
+  tagline: An open-source AutoML server you run yourself. Train a model from a CSV, then predict from AI tools such as Claude Code or Codex, from your own service through the API, or in the browser. No machine-learning expertise needed.
   image:
     src: /fione-logo.svg
     alt: Fione
@@ -23,7 +23,7 @@ hero:
 
 features:
   - title: Use it from AI tools
-    details: With MCP switched on, AI tools such as Claude Code and Codex can upload a CSV, train, read the results and predict on your Fione server, and tell you what it found.
+    details: With an API token, AI tools such as Claude Code or Codex can upload a CSV, train, read the results and predict on your Fione server over MCP, and tell you what it found. They bring their own language model.
   - title: No machine-learning expertise needed
     details: The EasyML wizard takes you from a CSV to a rated model and a prediction file, with a plain-language explanation of the score.
   - title: Predictions in your own service

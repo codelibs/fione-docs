@@ -1,17 +1,20 @@
 ---
 title: "Run the AutoML loop from an AI tool with MCP"
-description: "Connect Claude Code, Codex or another MCP client to Fione: upload a CSV, train, wait, read the leaderboard and predict, with the limits and safeguards."
+description: "Connect AI tools such as Claude Code or Codex to Fione over MCP: upload a CSV, train, wait, read the leaderboard and predict, with limits and safeguards."
 ---
 
 # Run the AutoML loop from an AI tool with MCP
 
-Fione's MCP endpoint lets an AI client such as Claude Code, Claude Desktop or Codex do the work you would do in the browser: create a project, upload a CSV, look at the data, decide how to train, start the training, wait for it, read the results and predict. Fione trains and predicts on its own server; the client decides what to do next and tells you what it found.
+Fione's MCP endpoint lets an AI client such as Claude Code, Claude Desktop or Codex do the work you would do in the browser: create a project, upload a CSV, look at the data, decide how to train, start the training, wait for it, read the results and predict. Fione trains and predicts on its own server; the client decides what to do next and tells you what it found. The client brings its own language model: Fione needs none for this, and the [assistant](/guide/assistant) can stay off.
 
-This page walks through the situations it is meant for. The setting-by-setting reference is in [Assistant setup, privacy and MCP](/docs/assistant).
+This page walks through the situations it is meant for. The setting-by-setting reference is in [MCP](/docs/mcp).
 
 ## Before you start
 
-1. **Switch it on.** MCP is off by default. Set `FIONE_MCP_ENABLED=true` to let a client read your projects, and also `FIONE_MCP_WRITE_ENABLED=true` to let it create projects, upload data, start jobs and predict (in `docker/.env` for Compose, then restart Fione). The workflows below need both; [looking at projects you already have](#looking-at-projects-you-already-have) needs only the first.
+1. **MCP is on.** A fresh install serves MCP, with the tools that create projects, upload data, start jobs and predict. An administrator can switch MCP, or only those tools, off and on again in the **MCP** card of the **System status** page (account menu). The workflows below need both switches on; [looking at projects you already have](#looking-at-projects-you-already-have) needs only the first, **Reading projects, datasets and models**.
+
+   ![The MCP card on the System status page](./img/system.png)
+
 2. **Create an API token** on the **Account** page (see [Users and sharing](/guide/users-sharing#api-tokens)). The client acts as the token's owner, with that person's role and projects.
 3. **Give the client the URL and the token.** The endpoint is `/mcp` on Fione's own port. In Claude Code:
 
@@ -71,7 +74,7 @@ There are two ways, by how many rows you have.
 
 ## Looking at projects you already have
 
-With only `FIONE_MCP_ENABLED`, a client can list projects, datasets and models and read descriptions, results and explanations, and ask for a proposed training configuration or Join, which is not saved. It cannot create, start or change anything. This suits questions such as "which of my models is best for `price`, and why?" or "what would you change in this dataset before training?".
+With the tools that change things switched off, a client can list projects, datasets and models and read descriptions, results and explanations, and ask for a proposed training configuration or Join, which is not saved. It cannot create, start or change anything. This suits questions such as "which of my models is best for `price`, and why?" or "what would you change in this dataset before training?".
 
 ## Keeping it safe
 
@@ -99,11 +102,11 @@ With only `FIONE_MCP_ENABLED`, a client can list projects, datasets and models a
 
 | What you see | What to do |
 |---|---|
-| 404 from `/mcp` | `FIONE_MCP_ENABLED` is off. Set it to `true` and restart Fione. |
-| The client lists no `create_project` or `start_training` | `FIONE_MCP_WRITE_ENABLED` is off. Set it to `true` and restart Fione. |
+| 404 from `/mcp` | MCP is off. An administrator turns it on in the **MCP** card of the **System status** page. When the card says `FIONE_MCP_ENABLED=false` keeps it off, remove that setting (or set it to `true`) and restart Fione. |
+| The client lists no `create_project` or `start_training` | The tools that change things are off. An administrator turns on **Creating projects, adding datasets and starting jobs** on the **System status** page; when `FIONE_MCP_WRITE_ENABLED=false` keeps them off, remove that setting and restart Fione. |
 | 401 from `/mcp` | The token is missing, wrong or revoked. Create one on the **Account** page; a session cookie does not work. |
 | "busy" | Two calls are already running (a waiting `wait_for_job` holds one). Ask again in a moment. |
-| The upload URL answers 404 | It is unknown, already used, expired, or MCP or its write switch is off. Ask for a new one. |
+| The upload URL answers 404 | It is unknown, already used, expired, or MCP or its tools that change things are off. Ask for a new one. |
 | The upload answers "invalid_csv" | The file does not parse as a CSV. The answer gives the field counts; fix the file and send it again to the same URL. |
 | `predict` is refused as too large | Send fewer rows, or use a `predict` dataset with `start_batch_predict` and `get_predictions`. |
 | A write tool is refused | The token's user is a viewer, or has no write access to that project. |

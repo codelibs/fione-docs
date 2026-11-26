@@ -1,27 +1,32 @@
 ---
-title: "アシスタントの設定・プライバシー・MCP"
-description: "Fione のアシスタントを Ollama または Claude で設定し、言語モデルに送られるデータ、リクエストの上限、MCP クライアント、トラブル対処を説明します。"
+title: "アシスタントの設定とプライバシー"
+description: "Fione の任意機能のアシスタントを Ollama または Claude でオンにし、言語モデルに送られるデータ、リクエストの上限、トラブル対処を説明します。"
 ---
 
-# アシスタントの設定・プライバシー・MCP
+# アシスタントの設定とプライバシー
 
-アシスタントは、プロジェクトのデータセットとモデルについての質問に分かりやすい言葉で答え、人が確認する学習を提案することもできます。使い方は[アシスタントを使う](/ja/guide/assistant)を参照してください。このページは管理者向けで、言語モデルの接続方法、送られるデータ、リクエストの上限、MCP エンドポイント、問題の直し方を説明します。
+アシスタントは、ブラウザで使う任意機能のチャットです。プロジェクトのデータセットとモデルについての質問に分かりやすい言葉で答え、ページにコメントを付け、人が確認する学習を提案することもできます。言語モデルを設定しない限りオフです (下記)。EasyML ウィザードの分析、評価、説明を含め、Fione のほかの機能はアシスタントなしで動きます。Claude Code や Codex などの AI ツールは、自分の言語モデルで [MCP](/ja/docs/mcp) から Fione を使うので、アシスタントは要りません。
+
+使い方は[アシスタントを使う](/ja/guide/assistant)を参照してください。このページは管理者向けで、言語モデルの接続方法、送られるデータ、リクエストの上限、問題の直し方を説明します。
 
 アシスタントは読むだけです。学習を始めたり、データセットを変更したり、何かを削除したりはできません。提案された学習は、プロジェクトを編集できる人が提案のボタンを押したときだけ始まります。
 
 ## 設定する
 
-アシスタントには言語モデルが必要です。提供元は次の 2 つから選びます (`FIONE_LLM_PROVIDER`)。
+アシスタントには言語モデルが必要です。提供元は次の 2 つから選びます (`FIONE_LLM_PROVIDER`。既定の `none` ではオフのままです)。
 
-- `ollama` (既定): [Ollama](https://ollama.com) サーバー。
+- `ollama`: [Ollama](https://ollama.com) サーバー。
 - `claude`: Anthropic API 経由の Claude (API キーを使用)。クライアントは Claude 5 ファミリーのモデル向けに作られています (アダプティブシンキング。思考ブロックをそれを作ったリクエストに結びつけるベータヘッダーを送ります)。
+
+オフの間は、どのページにもチャット、コメント、それらへのリンクは表示されず、アシスタントのページは 404 を返します。**システムの状態**ページには、オフであることとオンにする方法が表示されます。提供元なしにモデルの設定 (`FIONE_LLM_BASE_URL`、`FIONE_LLM_MODEL`、`FIONE_LLM_API_KEY`、`FIONE_LLM_EXTRA_BODY`、`FIONE_LLM_AUTO_PULL=true`) があると、Fione は起動時に止まります。
 
 Fione にはモデルは同梱されておらず、何もインストールされません。設定の方法は次のとおりです。
 
-- **macOS (既定)。** Mac に Ollama アプリをインストールします。Compose の構成は `http://host.docker.internal:11434/v1` でそれに接続し、`gemma4:12b-mlx` を要求します。このモデルは Mac の GPU で動きます (コンテナからは GPU を使えないため、Ollama はホストで動かします)。Ollama の既定のコンテキスト 4096 トークンはアシスタントのツールには小さすぎるので、`OLLAMA_CONTEXT_LENGTH=16384` を付けて起動してください (アプリへの設定方法は Ollama の FAQ を参照)。そのあと管理者が、**システムの状態**ページの**モデルをダウンロード**でモデルをダウンロードします。`docker/.env` に設定する項目はありません。
+- **macOS。** Mac に Ollama アプリをインストールし、`docker/.env` に `FIONE_LLM_PROVIDER=ollama` を設定します。Compose の構成は `http://host.docker.internal:11434/v1` でそれに接続し、`gemma4:12b-mlx` を要求します。このモデルは Mac の GPU で動きます (コンテナからは GPU を使えないため、Ollama はホストで動かします)。Ollama の既定のコンテキスト 4096 トークンはアシスタントのツールには小さすぎるので、`OLLAMA_CONTEXT_LENGTH=16384` を付けて起動してください (アプリへの設定方法は Ollama の FAQ を参照)。そのあと管理者が、**システムの状態**ページの**モデルをダウンロード**でモデルをダウンロードします。
 - **Linux、またはホストに Ollama がない場合。** Compose の中で Ollama を動かします。`docker/.env` の「Linux, or no Ollama on the host」のブロックのコメントを外して、通常どおりスタックを起動します。
 
   ```sh
+  FIONE_LLM_PROVIDER=ollama
   COMPOSE_PROFILES=ollama
   FIONE_LLM_BASE_URL=http://ollama:11434/v1
   FIONE_LLM_MODEL=gemma4:12b
@@ -29,7 +34,7 @@ Fione にはモデルは同梱されておらず、何もインストールさ�
   ```
 
   CPU だけで動くので答えは遅く、モデル (約 8 GB) は最初の起動時にダウンロードされます。
-- **別の Ollama サーバー。** `FIONE_LLM_BASE_URL` (`/v1` で終わるもの) と `FIONE_LLM_MODEL` を設定します。前段のプロキシがキーを求めるなら `FIONE_LLM_API_KEY` も設定します。アシスタントはモデルの推論の出力をオフにします。変えるには `FIONE_LLM_EXTRA_BODY` を使います。
+- **別の Ollama サーバー。** `FIONE_LLM_PROVIDER=ollama`、`FIONE_LLM_BASE_URL` (`/v1` で終わるもの) と `FIONE_LLM_MODEL` を設定します。前段のプロキシがキーを求めるなら `FIONE_LLM_API_KEY` も設定します。アシスタントはモデルの推論の出力をオフにします。変えるには `FIONE_LLM_EXTRA_BODY` を使います。
 - **Claude。** `docker/.env` に `FIONE_LLM_PROVIDER=claude` と `FIONE_LLM_API_KEY` を設定します (キーがないと Fione は起動しません)。ベース URL とモデルの既定は Anthropic API と `claude-opus-5-5` です。別のモデルを使うには `FIONE_LLM_MODEL` を設定します。`FIONE_LLM_EXTRA_BODY` は Ollama 専用で、Claude で設定すると Fione は起動しません。リクエストではプロンプトキャッシュを使います。答えの各ステップや、プロジェクト内の複数の答えで同じになるツール定義とシステムプロンプト、そしてこれまでの会話がキャッシュの対象になり、後のステップが安く、速くなります。
 
   ```sh
@@ -62,7 +67,7 @@ Claude の場合と、このマシンやその隣にない Ollama の場合は�
 - モデルの結果と、データセットの値の例。列の最頻値、分類のラベル、曲線の点などです。
 - ジョブのメッセージ。失敗したジョブの失敗メッセージ (200 文字まで) を含みます。
 
-自動コメントも、プロジェクトのメンバーの誰かがそのページを初めて開いたときに、質問なしで同じように送られます。コメントが読む列名、統計、値の例が同じモデルのホストに届きます。データファイルそのものは送られません。すべて、設定したモデルのサーバーに送られます。Claude と、別のマシンにある Ollama では、事前に管理者の一度きりの確認が必要です。MCP の読み取りツールが値の例を返すことはありません ([MCP](#mcp)を参照)。
+自動コメントも、プロジェクトのメンバーの誰かがそのページを初めて開いたときに、質問なしで同じように送られます。コメントが読む列名、統計、値の例が同じモデルのホストに届きます。データファイルそのものは送られません。すべて、設定したモデルのサーバーに送られます。Claude と、別のマシンにある Ollama では、事前に管理者の一度きりの確認が必要です。MCP の読み取りツールが値の例を返すことはありません ([MCP](/ja/docs/mcp)を参照)。
 
 Claude または別のマシンの Ollama を使っている場合、**アシスタント**ページとすべてのアシスタントのコメントに、ホスト名つきの警告が表示されます。Fione サーバーの `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`、`NO_PROXY` はこの通信にも適用されます。
 
@@ -90,69 +95,14 @@ Fione の再起動時に実行中だった答えは、中断として終わり�
 
 列が多くてツールの結果に収まらないデータセットは、種類ごとの列名、欠損率、そして予測する列の詳細だけで説明されます。1 つの列の数値は `get_column_stats` で得られます。
 
-## MCP
-
-Fione は、同じ読み取り専用のツールを MCP クライアント (MCP に対応した AI アシスタントやエディター) に提供できます。2 つ目のスイッチを有効にすると、プロジェクトの作成、データセットのアップロード、ジョブの開始、予測を行うツールも提供します ([MCP クライアントからジョブを開始する](#mcp-クライアントからジョブを開始する)を参照)。想定している使い方は [MCP で AI ツールから AutoML を一通り実行する](/ja/guide/mcp)にあります。**既定ではオフ**です。`FIONE_MCP_ENABLED=true` を設定します (Compose では `docker/.env`)。エンドポイントは Fione 自身のポートの `/mcp` で、たとえば `http://127.0.0.1:8080/mcp` です。Streamable HTTP (POST 上の JSON-RPC、プロトコルバージョン 2025-03-26、2025-06-18、2025-11-25) で、セッションは持ちません。POST だけに JSON で応答し (イベントストリームとバッチはありません)、リクエストの本文は最大 1 MiB です。MCP がオフのとき、`/mcp` は 404 を返します。
-
-1. **アカウント**ページで API トークンを作成します。
-2. クライアントに URL と `Authorization: Bearer <your-token>` ヘッダーを設定します。多くのクライアントは次のような設定を受け付けます。
-
-   ```json
-   {"mcpServers": {"fione": {"type": "http", "url": "http://127.0.0.1:8080/mcp",
-                             "headers": {"Authorization": "Bearer <your-token>"}}}}
-   ```
-
-クライアントはトークンの持ち主として動作し、その人が読めるプロジェクトを見られます。プロジェクト、データセット、モデルの一覧と、その説明、結果、説明を読めるほか、提案された学習設定や Join の設定を受け取れます (保存はされません)。1 つ目のスイッチだけでは、何かを開始したり変更したりはできません。これらの読み取りツールが値の例を返すことはありません。セッション Cookie は拒否され、API トークンだけがエンドポイントを開けます。トークンはあなたと同じ権限を持つので、秘密にしてください。
-
-- リバースプロキシの背後では、ネットワーク外の MCP クライアントを許可しないなら `/mcp` をブロックしてください。
-- ブラウザからのリクエスト (`Origin` ヘッダー付き) は、`localhost`、`127.0.0.1`、`[::1]` (ポートは問いません) または `FIONE_PUBLIC_URL` のオリジンからのものだけ受け付けます。ブラウザ上のクライアントが別のアドレスで Fione に接続するときは、これを設定してください。
-- 同時に処理される MCP リクエストは最大 2 つです (`initialize` やツール一覧を含むすべてのリクエストが数えられます)。ほかのリクエストは最大 15 秒待ち、その後「busy」と返されます。
-
-Claude Code や Codex にも、同じ URL とトークンを渡します。
-
-```sh
-claude mcp add --transport http fione http://127.0.0.1:8080/mcp \
-  --header "Authorization: Bearer <your-token>"
-
-# Codex はトークンを環境変数から読みます
-export FIONE_TOKEN=<your-token>
-codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE_TOKEN
-```
-
-### MCP クライアントからジョブを開始する
-
-`FIONE_MCP_WRITE_ENABLED=true` も設定すると、クライアントは、トークンのユーザーとして次のツールも使えます。`create_project` は編集者または管理者のロールが必要です。`upload_dataset`、`create_upload_url`、`start_training`、`start_batch_predict`、`run_module`、`cancel_job` はプロジェクトへの書き込み権限が必要です (REST API と同じく、管理者、またはロールが閲覧者でないそのプロジェクトの所有者・編集者)。`list_modules` はどのトークンでも使えます。ほかは読み取り権限だけで使えます。プロジェクトに属さないジョブを読んだり取り消したりできるのは管理者だけです。
-
-| ツール | できること |
-|---|---|
-| `create_project` | ユーザーが所有するプロジェクトを作り、`project_id` を返します。 |
-| `upload_dataset` | インラインで送った CSV の文章 (UTF-8 で 512 KiB まで) から、データセット (タイプ `train`、`test`、`predict`) を追加します。 |
-| `create_upload_url` | `FIONE_MAX_UPLOAD_BYTES` までの大きさの CSV ファイルを送るための、一度だけ使える URL を返します。 |
-| `start_training`、`start_batch_predict`、`run_module` | ジョブを積み、`job_id` を返します。 |
-| `list_modules` | Python モジュールを、種類とパラメーターとともに一覧します。 |
-| `get_job`、`wait_for_job`、`list_jobs` | ジョブの状態と、終了後はその結果 (学習の `model_id`、バッチ予測の `dataset_id`) を返します。`list_jobs` は新しい順に 50 件で、`project_id` と `status` (`queued`、`running`、`done`、`failed`、`cancelled`) で絞り込めます。 |
-| `cancel_job` | 待機中または実行中のジョブをキャンセルします。 |
-| `predict` | 1 行から 1000 行を、オブジェクトで受け取ってすぐに予測します。 |
-| `get_predictions` | 終わったバッチ予測の結果を、ページ単位で読みます (既定 100 行、最大 1000 行)。 |
-
-どのツールも何も削除しません。データの値を返すのは `predict` と `get_predictions` だけで、予測したラベルと `p_<class>` のクラス名です。この 2 つは読み取り権限だけで使えます。Fione は人に確認できないので、確認はクライアント側の承認だけです。クライアントが承認を求めるように、`create_project`、`upload_dataset`、`create_upload_url`、`start_training`、`start_batch_predict`、`run_module`、`cancel_job`、`predict` には「変更を行う」と印が付いています。ほかは読み取り専用の印です。トークンはそのユーザーの権限を持つので、ジョブを始めさせたくないクライアントには、閲覧しかできないユーザーのトークンを使ってください。
-
-**ジョブを待つ。** `wait_for_job` は最長 `timeout_secs` (既定 10、最大 15) 秒待ち、ジョブが終わったかどうかを `done` で返します。`done` が false の間は、もう一度呼びます。待っている呼び出しは MCP の 2 つの枠の 1 つを使うので、待ちは短くしてあります。ジョブの `message` は MCP では送られません。`null` になり、ジョブにメッセージがあるときは `message_hidden` が `true` になります。何が起きたかは、状態と `get_training_events` でわかります (MCP では、イベントの種類、モデルの種類、例外の型は残りますが、メッセージの文面は除かれます)。
-
-**データセットをアップロードする。** `upload_dataset` は小さなファイル向けです。大きなファイルでは、シェルのあるクライアントが `create_upload_url` を呼び、返された `example` のコマンド `curl -T file.csv '<url>'` (生の CSV を HTTP の PUT で送ります。認証は不要なので URL は秘密にします) でファイルを送ります。URL は 15 分間、アップロードが 1 回成功するまで有効です。失敗したアップロード (CSV として読めない、上限を超えた) では使い切られません。URL は、`FIONE_PUBLIC_URL` を設定していればその値で、なければリクエストのアドレスで始まります。リバースプロキシの背後では、公開用の URL になるように `FIONE_PUBLIC_URL` を設定してください。URL にはトークンが含まれます。Fione 自身のログとアクセスログでは伏せられますが、プロキシのアクセスログには記録されるので、`/api/v1/uploads/` で始まるパスはそこで伏せてください。
-
-**予測する。** `predict` は `rows` を受け取ります。各行は、モデルが読むすべての列の値を持つオブジェクトです (ほかのキーは無視されます)。行の順に予測を 1 つずつ返します。`predict`、分類ではさらにクラスごとの `p_<class>` です。行は保存されません。結果は 32 KiB に収まる必要があり、超える要求は収まる行数の目安とともに断られます。もっと多くの行は、`predict` データセットをアップロードし、`start_batch_predict` を実行して、結果を `get_predictions` で読みます。このインストールが署名していないインポートしたモデルや、Web プロセスで読み込むには大きすぎるモデルは `predict` では断られるので、これも `start_batch_predict` を使います。`get_predictions` は予測の列だけを返し、入力の値は返しません。`offset` から `limit` 行ずつです。ページが 32 KiB に収まるように切られたときは `truncated` が true になり、次のページは `offset` に返された行数を足した位置から始まります。
-
-`propose_join` の結果は、キー `proposal` (`true`)、`kind` (`join`)、`config` (Join モジュールのパラメーター)、`warnings`、`rationale` を持ちます。
-
-`propose_training_config` の結果は、キー `proposal` (`true`)、`config`、`ignored_suggestions`、`warnings`、`rationale` を持ちます。各警告は `{code, message, params}` のオブジェクトで、`message` は英語の文、`code` と `params` は学習の提案カードが翻訳に使うものです。`ignored_suggestions` の各要素は `{column, reason, code}` で、`reason` も英語です。
-
 ## トラブルシューティング
 
 メッセージは、画面に表示される日本語の文言のうち特徴的な部分を示します。以下に出てくる設定のうち `docker/.env` に最初からないものは、`docker/compose.yaml` の `fione` サービスの `environment` に書きます ([設定リファレンス](/ja/docs/configuration)を参照)。
 
 | 表示される内容 | 対処 |
 |---|---|
+| **システムの状態**ページにアシスタントはオフと表示される | `FIONE_LLM_PROVIDER` が `none` (既定) です。上のとおり `ollama` か `claude` を設定して、Fione を再起動します。 |
+| Fione が起動せず「set while the assistant is off」と出る | 提供元なしにモデルの設定 (`FIONE_LLM_BASE_URL`、`FIONE_LLM_MODEL`、`FIONE_LLM_API_KEY`、`FIONE_LLM_EXTRA_BODY`、`FIONE_LLM_AUTO_PULL=true`) があります。`FIONE_LLM_PROVIDER` を設定するか、その設定を外します。 |
 | 「言語モデルのサーバーに接続できません」 | Ollama は動いていますか。`FIONE_LLM_BASE_URL` は Fione のコンテナから届きますか (Mac では `host.docker.internal`)。Claude の場合、Fione のコンテナから Anthropic API のアドレス (`https://api.anthropic.com`、または `FIONE_LLM_BASE_URL` のゲートウェイ) に、必要なら `HTTPS_PROXY` 経由で届きますか。使用中のアドレスは**システムの状態**ページに表示されます。 |
 | 「言語モデルはまだダウンロードされていません」 | 管理者が**システムの状態**ページで**モデルをダウンロード**を押します。または `FIONE_LLM_AUTO_PULL=true` を設定します。 |
 | 「アシスタントのツールには小さすぎます」 | `FIONE_LLM_CONTEXT_TOKENS` を、`FIONE_LLM_MAX_TOKENS` にアシスタントが必要とする分を足した値より大きくします。Ollama では `OLLAMA_CONTEXT_LENGTH=16384` を付けて起動し、`FIONE_LLM_CONTEXT_TOKENS=16384` を設定します。 |

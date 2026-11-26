@@ -34,7 +34,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 
 ![The first administrator page](./img/setup.png)
 
-The first build downloads and installs the machine-learning libraries and takes a few minutes. `--wait` returns when the containers (`fione` and `seaweedfs`, and `ollama` with that profile) are healthy. Fione is then at <http://127.0.0.1:8080/>. The port is published on this machine only; to serve other people, put a reverse proxy with HTTPS in front of it (see the reverse proxy notes in [Configuration](/docs/configuration)).
+The first build downloads and installs the machine-learning libraries and takes a few minutes. `--wait` returns when the containers (`fione` and `seaweedfs`) are healthy. Fione is then at <http://127.0.0.1:8080/>. The port is published on this machine only; to serve other people, put a reverse proxy with HTTPS in front of it (see the reverse proxy notes in [Configuration](/docs/configuration)).
 
 ## 3. Create the administrator
 
@@ -66,9 +66,13 @@ docker compose -f docker/compose.yaml --env-file docker/.env exec -T fione pytho
 
 This writes `iris.csv`: 150 rows, four measurements and the `species` column. Fione accepts CSV files in UTF-8, Shift_JIS or EUC-JP, separated by commas, semicolons, tabs or `|`, with the column names in the first row. The default upload limit is 1 GiB.
 
-## About the assistant banner
+## Use it from AI tools
 
-The assistant needs a language model, which this quick start does not set up. Until one is reachable, a banner on the pages tells you that the assistant cannot answer yet (for example, "The assistant cannot reach its language model server right now."). That is expected: training, predictions and serving work without it, and only the assistant's comments and proposals are missing. To add a language model, see [Assistant](/guide/assistant).
+MCP is on, so AI tools such as Claude Code or Codex can use this Fione right away: create an API token on the **Account** page and give it to the tool with the address `http://127.0.0.1:8080/mcp`. The tool brings its own language model. See [Run the AutoML loop from an AI tool with MCP](/guide/mcp).
+
+## The assistant (optional)
+
+Fione needs no language model: training, predictions, explanations, serving and MCP work without one. The assistant, a chat that answers questions about your data and models in the browser, is off. To turn it on, set `FIONE_LLM_PROVIDER` in `docker/.env` and start the stack again: `ollama` with the Ollama app on a Mac, or with an Ollama in Compose on Linux, or `claude` with an Anthropic API key. See [Assistant setup and privacy](/docs/assistant).
 
 ## Next step
 

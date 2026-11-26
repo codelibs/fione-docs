@@ -52,14 +52,14 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 
 ### アシスタント (言語モデル) と MCP
 
-これらの設定は[アシスタントの設定と MCP](/ja/docs/assistant)で説明しています。
+これらの設定は[アシスタントの設定とプライバシー](/ja/docs/assistant)と [MCP](/ja/docs/mcp) で説明しています。
 
 | 変数 | 既定値 | 内容 | 変更する場面 |
 |---|---|---|---|
-| `FIONE_LLM_PROVIDER` | `ollama` | Ollama サーバーなら `ollama` (思考の出力は、`FIONE_LLM_EXTRA_BODY` で指定しない限りオフ)、Anthropic API 経由の Claude なら `claude` (`FIONE_LLM_API_KEY` が必要で、Claude 5 ファミリーのモデル向けに作られています)。 | Claude を使うとき。 |
-| `FIONE_LLM_BASE_URL` | プロバイダーの既定値 | 言語モデルのサーバー。`http(s)://host[:port][/path]` で、認証情報・クエリ・フラグメントは付けられません。空にはならず、未設定または空なら `ollama` では `http://host.docker.internal:11434/v1` (ホスト上の Ollama アプリ)、`claude` では `https://api.anthropic.com` です。`ollama` では `/v1` で終わる必要があります (Fione は `<ベース URL>/chat/completions` を呼びます)。`claude` では `<ベース URL>/v1/messages` を呼びます。Fione 自身の `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`、`NO_PROXY` はこの通信にも適用されます。Docker の外で Fione を動かすときは、既定の `host.docker.internal` を `http://localhost:11434/v1` に置き換えてください。 | 別の場所の Ollama や、Anthropic API の前に置いたプロキシ・ゲートウェイを使うとき。 |
+| `FIONE_LLM_PROVIDER` | `none` | `none` ではアシスタントはオフです。どのページにもチャット、コメント、リンクは表示されず、`FIONE_LLM_BASE_URL`、`FIONE_LLM_MODEL`、`FIONE_LLM_API_KEY`、`FIONE_LLM_EXTRA_BODY`、`FIONE_LLM_AUTO_PULL=true` は起動時に拒否されます。MCP と Fione のほかの機能には不要です。Ollama サーバーなら `ollama` (思考の出力は、`FIONE_LLM_EXTRA_BODY` で指定しない限りオフ)、Anthropic API 経由の Claude なら `claude` (`FIONE_LLM_API_KEY` が必要で、Claude 5 ファミリーのモデル向けに作られています)。 | アシスタントを使うとき (`ollama` か `claude`)。 |
+| `FIONE_LLM_BASE_URL` | プロバイダーの既定値 | 言語モデルのサーバー。`http(s)://host[:port][/path]` で、認証情報・クエリ・フラグメントは付けられません。`ollama` と `claude` では空にはならず、未設定または空なら `ollama` では `http://host.docker.internal:11434/v1` (ホスト上の Ollama アプリ)、`claude` では `https://api.anthropic.com` です。`ollama` では `/v1` で終わる必要があります (Fione は `<ベース URL>/chat/completions` を呼びます)。`claude` では `<ベース URL>/v1/messages` を呼びます。Fione 自身の `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`、`NO_PROXY` はこの通信にも適用されます。Docker の外で Fione を動かすときは、既定の `host.docker.internal` を `http://localhost:11434/v1` に置き換えてください。 | 別の場所の Ollama や、Anthropic API の前に置いたプロキシ・ゲートウェイを使うとき。 |
 | `FIONE_LLM_API_KEY` | 未設定 | サーバーのキー (表示可能な ASCII 文字)。`claude` では必須 (なければ Fione は起動しません) で、`x-api-key` として送られます。`ollama` では任意で、`Authorization: Bearer <キー>` として送られます。ログにも画面にも出ず、設定したホストにだけ送られます。 | `claude` を使うとき、またはキーを求めるプロキシの背後の Ollama を使うとき。 |
-| `FIONE_LLM_MODEL` | `gemma4:12b-mlx` (`claude` では `claude-opus-5-5`) | リクエストごとに送るモデル名 (表示可能な ASCII 文字で 1〜200 文字)。MLX モデルは、Apple Silicon の Mac のホストに入れた Ollama でだけ動き、Fione はその API 経由で使います。それ以外 (Linux やコンテナ内の Ollama) では `gemma4:12b` のような MLX ではないタグを使ってください。 | 別のモデルを使うとき、MLX が動かないマシンのとき。 |
+| `FIONE_LLM_MODEL` | `ollama` では `gemma4:12b-mlx`、`claude` では `claude-opus-5-5` | リクエストごとに送るモデル名 (表示可能な ASCII 文字で 1〜200 文字)。MLX モデルは、Apple Silicon の Mac のホストに入れた Ollama でだけ動き、Fione はその API 経由で使います。それ以外 (Linux やコンテナ内の Ollama) では `gemma4:12b` のような MLX ではないタグを使ってください。 | 別のモデルを使うとき、MLX が動かないマシンのとき。 |
 | `FIONE_LLM_EXTRA_BODY` | 未設定 | `ollama` のみ (`claude` では拒否されます)。すべてのリクエストにマージする JSON オブジェクト。例: `{"reasoning_effort": "none"}`。キー `model`、`messages`、`tools`、`stream`、`stream_options`、`max_tokens` は指定できません。未設定のときは `{"reasoning_effort": "none"}` です。 | Ollama サーバーで思考をオンにしたり、サンプリングのオプションを指定したりするとき。 |
 | `FIONE_LLM_AUTO_PULL` | `false` | `ollama` のとき、サーバーにモデルがなければダウンロードし、進み具合を**システムの状態**ページに表示します。`false` ならサーバーのモデルは利用者に任され、モデルがないときはページにダウンロードのボタンが出ます。`claude` では無視されます。 | 確認なしでダウンロードさせたいとき。たとえば Fione だけが使う Ollama サーバーなど。 |
 | `FIONE_LLM_MAX_TOKENS` | `1024` (`claude` では `16000`) | 1 回の応答のトークン数の上限 (思考を含む)。64〜64000 で、`FIONE_LLM_CONTEXT_TOKENS` より 5240 以上小さくします。 | 長い答えが必要なとき、遅いモデルを抑えたいとき。 |
@@ -67,8 +67,8 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LLM_MAX_TOOL_ROUNDS` | `6` | 1 つの答えがツールを呼べる回数。超えると「手順が多すぎる」として止まります。1〜20。 | 調べる回数が多い質問のとき。 |
 | `FIONE_LLM_TURN_TIMEOUT_SECS` | `180` | 1 つの答えにかけられる時間 (ツールの全ラウンドを含む)。超えるとタイムアウトで終わります。10〜1800。 | モデルやハードウェアが遅いとき。 |
 | `FIONE_LLM_MAX_CONCURRENT_TURNS` | `2` | 全ユーザー合計で同時に書く答えの数。超えた分は待ち行列に入ります。1〜16。 | 並列リクエストを処理できるサーバーのとき。 |
-| `FIONE_MCP_ENABLED` | `false` | アシスタントの読み取り専用ツールを、Fione 自身のポートの `/mcp` で MCP として提供します (Streamable HTTP、POST 上の JSON-RPC、ステートレス)。クライアントには `Authorization: Bearer` の API トークンが必要で、セッション Cookie は拒否されます。トークンのユーザーが読めるプロジェクトの読み取り専用ツールを一覧・呼び出しでき、データセットの値の例は受け取りません。これだけでは、何かを開始・変更・削除することはできません。 | MCP クライアントにプロジェクトを読ませたいときは `true`。 |
-| `FIONE_MCP_WRITE_ENABLED` | `false` | `FIONE_MCP_ENABLED` に加えて、MCP クライアントに次のツールを提供します。プロジェクトを作る (`create_project`)、データセットを追加する (`upload_dataset`、`create_upload_url`)、学習 (`start_training`)・予測 (`start_batch_predict`)・モジュール実行 (`run_module`) を積む、行をすぐに予測する (`predict`)、ジョブをキャンセルする (`cancel_job`)、そしてそれに続く `list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`get_predictions` です。トークンのユーザーとして動作します。プロジェクトの作成には編集者または管理者のロールが必要です。アップロード、ジョブを積むこと、キャンセルには、REST API と同じくプロジェクトへの書き込み権限が必要です。`list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`predict`、`get_predictions` は読み取り権限だけで使えます。何も削除しません。 | Claude Code などの MCP クライアントにジョブを開始させたいときは `true`。[MCP で AI ツールから AutoML を一通り実行する](/ja/guide/mcp)を参照。 |
+| `FIONE_MCP_ENABLED` | `true` | 読み取り専用のツールを、Fione 自身のポートの `/mcp` で [MCP](/ja/docs/mcp) として提供します (Streamable HTTP、POST 上の JSON-RPC、ステートレス)。クライアントには `Authorization: Bearer` の API トークンが必要で、セッション Cookie は拒否されます。トークンのユーザーが読めるプロジェクトの読み取り専用ツールを一覧・呼び出しでき、データセットの値の例は受け取りません。これだけでは、何かを開始・変更・削除することはできません。Fione 側の言語モデルは要りません (アシスタントはオフでかまいません)。管理者は**システムの状態**ページでもオフにし、またオンに戻せます。`false` なら、そのページの表示にかかわらずオフのままです。 | MCP をオフのままにするときは `false`。 |
+| `FIONE_MCP_WRITE_ENABLED` | `true` | `FIONE_MCP_ENABLED` に加えて、MCP クライアントに次のツールを提供します。プロジェクトを作る (`create_project`)、データセットを追加する (`upload_dataset`、`create_upload_url`)、学習 (`start_training`)・予測 (`start_batch_predict`)・モジュール実行 (`run_module`) を積む、行をすぐに予測する (`predict`)、ジョブをキャンセルする (`cancel_job`)、そしてそれに続く `list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`get_predictions` です。トークンのユーザーとして動作します。プロジェクトの作成には編集者または管理者のロールが必要です。アップロード、ジョブを積むこと、キャンセルには、REST API と同じくプロジェクトへの書き込み権限が必要です。`list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`predict`、`get_predictions` は読み取り権限だけで使えます。何も削除しません。**システムの状態**ページでオフにし、またオンに戻せます。`false` なら、そのページの表示にかかわらずオフのままです。 | MCP クライアントに読み取りだけをさせるときは `false`。[MCP で AI ツールから AutoML を一通り実行する](/ja/guide/mcp)を参照。 |
 
 設定ではない固定の上限: モデルのインポートファイルは 512 MiB まで、アップロードする Python モジュールは 256 KiB までです。
 
@@ -87,13 +87,13 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_SERVING_PORT` | いいえ | オプションの `fione-serving` サービスのホスト側ポート (既定は `8081`、127.0.0.1 上)。 |
 | `FIONE_MODEL_DIR` | いいえ | `fione-serving` サービスがマウントするモデルのディレクトリ (既定はリポジトリの `docker/model`)。 |
 | `FIONE_LLM_BASE_URL` | いいえ | Fione に渡されます (上記参照)。空ならプロバイダーの既定値で、`ollama` ではホスト上の Ollama、`http://host.docker.internal:11434/v1` です。`ollama` プロファイルを使うときは `http://ollama:11434/v1` に設定します。 |
-| `FIONE_LLM_PROVIDER` | いいえ | Fione に渡されます (既定は `ollama`。`claude` には下のキーが必要)。 |
+| `FIONE_LLM_PROVIDER` | いいえ | Fione に渡されます (既定は `none` でアシスタントはオフ。`ollama`、または下のキーと一緒に `claude`)。 |
 | `FIONE_LLM_MODEL` | いいえ | Fione に渡されます。空ならプロバイダーの既定値 (`ollama` では `gemma4:12b-mlx`、`claude` では `claude-opus-5-5`)。`ollama` プロファイルでは `gemma4:12b` を指定します。 |
 | `FIONE_LLM_API_KEY` | `claude` のとき | Fione に渡されます (上記参照)。 |
 | `FIONE_LLM_AUTO_PULL` | いいえ | Fione に渡されます (既定は `false`。ボタンを押す人がいない `ollama` プロファイルでは `true` にします)。 |
-| `FIONE_MCP_ENABLED` | いいえ | Fione に渡されます (既定は `false`、上記参照)。 |
-| `FIONE_MCP_WRITE_ENABLED` | いいえ | Fione に渡されます (既定は `false`、上記参照)。 |
-| `COMPOSE_PROFILES` | いいえ | Docker Compose 自身の変数。`ollama` を指定すると Compose 内で Ollama サーバーを起動します ([アシスタントの設定と MCP](/ja/docs/assistant)を参照)。 |
+| `FIONE_MCP_ENABLED` | いいえ | Fione に渡されます (既定は `true`、上記参照)。 |
+| `FIONE_MCP_WRITE_ENABLED` | いいえ | Fione に渡されます (既定は `true`、上記参照)。 |
+| `COMPOSE_PROFILES` | いいえ | Docker Compose 自身の変数。`ollama` を指定すると、`FIONE_LLM_PROVIDER=ollama` のアシスタント用に Compose 内で Ollama サーバーを起動します ([アシスタントの設定とプライバシー](/ja/docs/assistant)を参照)。 |
 
 `FIONE_S3_ACCESS_KEY` または `FIONE_S3_SECRET_KEY` が空のままだと、Compose は起動を拒否します。この 2 つの S3 の値に使える文字は `A-Z a-z 0-9 / + = . _ -` だけで、それ以外だと SeaweedFS が起動を拒否します。
 
@@ -166,7 +166,7 @@ server {
 
 `Host` の行は必ず残してください。サインインとすべてのフォーム送信は、ブラウザの `Origin` と Fione が見る `Host` を比べるため、ないと拒否されます (403)。
 
-MCP エンドポイント (`/mcp`) は同じポートにあります。ネットワーク外の MCP クライアントを許可しないなら、プロキシでブロックしてください ([アシスタントの設定と MCP](/ja/docs/assistant)を参照)。
+MCP エンドポイント (`/mcp`) は同じポートにあります。ネットワーク外の MCP クライアントを許可しないなら、プロキシでブロックしてください ([MCP](/ja/docs/mcp)を参照)。
 
 ### セットアップトークン
 
