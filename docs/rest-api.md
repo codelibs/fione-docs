@@ -215,7 +215,7 @@ All paths are relative to `/api/v1`. The last column says who may call the endpo
 | `GET /projects/{project_id}/datasets/{dataset_id}/preview?rows=50` | The first rows (at most 200) as `{"columns": [...], "rows": [[...]]}`. | Read |
 | `GET /projects/{project_id}/datasets/{dataset_id}/profile` | Column statistics, histograms and correlations of a sample of about 100,000 rows spread over the whole dataset (`n_rows` is the dataset's rows, `sample_rows` the rows profiled). With `?target=<column>`, also leak suspects. | Read |
 | `GET /projects/{project_id}/datasets/{dataset_id}/columns/{column}` | The profile of one column. | Read |
-| `PUT /uploads/{token}` | Takes the raw CSV as the body for a one-time upload URL from the MCP tool `create_upload_url` (see [MCP](/guide/mcp)); answers like a dataset upload. No API token: the URL is the credential, and any refusal is 404. | Holder of the URL |
+| `PUT /uploads/{token}` | Takes the raw CSV as the body for a one-time upload URL from the MCP tool `create_upload_url` (see [MCP](/guide/mcp)); answers like a dataset upload. No API token: the URL is the credential. An unknown, used or expired URL, or MCP or its write switch off, answers 404; a file over the limit 413, a CSV that does not parse 422 `invalid_csv`. | Holder of the URL |
 
 ### Jobs
 

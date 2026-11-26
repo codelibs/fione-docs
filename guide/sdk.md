@@ -87,15 +87,17 @@ predictions = fione.predict(project["id"], model_id, new_rows)  # a "predict" co
 | `time_column` | none | Validates forward in time: the rows ordered by this number or date column are cut into parts, and each fold learns from the parts before the one it predicts. |
 | `seed` | `0` | The same seed gives the same splits and search. |
 | `balance_classes` | `False` | Gives rare classes more weight while learning. |
-| `decision` | `"argmax"` | `"argmax"`, `"balanced"` (adjusts for class sizes) or `"tuned"` (fits the decision threshold to `sort_metric`; two classes, or `qwk` with ordered classes); not together with `balance_classes`. Ignored for regression. |
+| `decision` | `"argmax"` | `"argmax"`, `"balanced"` (adjusts for class sizes; not together with `balance_classes`) or `"tuned"` (fits the decision threshold to `sort_metric`; two classes, or `qwk` with ordered classes). Ignored for regression. |
 | `target_transform` | `"none"` | `"none"` or `"log1p"` (regression only; ignored for classification). |
 | `quantile` | none | Learns this quantile (between 0 and 1) of a regression target instead of its mean, with the pinball loss. |
 | `event_column` | none | Survival: the target is a time that may be cut short, and this 0/1 column says whether the event happened. Models are ranked by `concordance`. Not with `quantile` or `target_transform`. |
 | `feature_engineering` | `True` | Adds derived features that clearly help. |
 | `stopping_rounds`, `stopping_metric`, `stopping_tolerance` | `10`, `"auto"`, `0.001` | Early stopping of a model family. |
-| `sort_metric` | `"auto"` | The score the leaderboard is ranked by: `auto` or one of `logloss`, `auc`, `aucpr`, `accuracy`, `balanced_accuracy`, `f1`, `macro_f1`, `precision`, `recall`, `mcc`, `kappa`, `qwk`, `rounded_qwk`, `brier`, `balanced_logloss`, `top3_accuracy`, `map3`, `gini`, `normalized_gini`, `lift_top_group`, `misclassification`, `mean_per_class_error`, `rmse`, `mse`, `mae`, `medae`, `r2`, `rmsle`, `mape`, `rmspe`, `smape`, `explained_variance`, `pearson`, `spearman`, `poisson`, `pinball` (with `quantile`) and `concordance` (with `event_column`), as far as they fit the task. `stopping_metric` takes the same names. |
+| `sort_metric` | `"auto"` | The score the leaderboard is ranked by (see below). |
 | `keep_cv_predictions`, `keep_cv_models`, `keep_cv_fold_assignment` | `False` | Keep cross-validation results (the models make the model file much larger). |
 | `ignored_columns` | `[]` | Columns that are not used as inputs. |
+
+`sort_metric` and `stopping_metric` take `auto` or one of `logloss`, `auc`, `aucpr`, `accuracy`, `balanced_accuracy`, `f1`, `macro_f1`, `precision`, `recall`, `mcc`, `kappa`, `qwk`, `rounded_qwk`, `brier`, `balanced_logloss`, `top3_accuracy`, `map3`, `gini`, `normalized_gini`, `lift_top_group`, `misclassification`, `mean_per_class_error`, `rmse`, `mse`, `mae`, `medae`, `r2`, `rmsle`, `mape`, `rmspe`, `smape`, `explained_variance`, `pearson`, `spearman`, `poisson`, `pinball` (with `quantile`) and `concordance` (with `event_column`), as far as they fit the task. The settings and metrics are explained in [AutoML screens](/guide/automl#training-settings).
 
 The web app offers the same settings on its training screen (see [AutoML screens](/guide/automl)). A configuration the engine refuses (an unknown option, or a target column with gaps or a single value) raises `FioneError` with HTTP status 422 and nothing is queued.
 
