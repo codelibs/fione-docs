@@ -2,17 +2,19 @@
 """Capture the documentation screenshots from a running Fione 20.0 test stack.
 
 The stack is the product repository's end-to-end stack (its docker/compose.e2e.yaml, which
-publishes http://127.0.0.1:18080 and a fake language model). Start it on a fresh volume
-(no administrator yet), then, with Playwright's Chromium installed:
+publishes http://127.0.0.1:18080), with the assistant off as in a default install: add a
+Compose file of your own that sets, for the ``fione`` service, ``FIONE_LLM_PROVIDER: none``,
+empty ``FIONE_LLM_BASE_URL`` and ``FIONE_LLM_MODEL``, ``FIONE_LLM_AUTO_PULL: "false"`` and
+``FIONE_PUBLIC_URL: http://127.0.0.1:8080`` (the MCP address the System status page shows).
+Start it on a fresh volume (no administrator yet), then, with Playwright's Chromium installed:
 
     FIONE_SETUP_TOKEN=<token of docker/e2e.env> \
-    uv run --project <path to the fione repository> --with pillow \
+    uv run --project <path to the fione repository> --with pillow --with playwright \
         python scripts/capture-screenshots.py [--base http://127.0.0.1:18080]
 
 It creates a throwaway administrator, a project, trains the iris model with the 1-minute
-preset, and writes the images to ``guide/img/`` (English) and ``ja/guide/img/`` (Japanese).
-The assistant's comments are removed from the pages before the shots: the stack's model is a
-stand-in that answers with canned text.
+preset, adds a second project with two tables to join, and writes the images to
+``guide/img/`` (English) and ``ja/guide/img/`` (Japanese).
 """
 
 from __future__ import annotations
@@ -29,9 +31,9 @@ ADMIN, PASSWORD = "docs-admin", "docs-admin-password-1"  # throwaway, inside the
 VIEWPORT = {"width": 1280, "height": 800}
 
 # One viewport-sized image per entry unless the name is in FULL_PAGE.
-FULL_PAGE = {"analyze", "summary", "result", "dataset", "train", "model-explain"}
-
-NOTE_SELECTORS = "#assistant-note, .assistant-note"
+FULL_PAGE = {
+    "analyze", "summary", "result", "dataset", "train", "model-explain", "system", "join"
+}
 
 
 def iris_csvs(directory: Path) -> tuple[Path, Path]:
@@ -45,10 +47,36 @@ def iris_csvs(directory: Path) -> tuple[Path, Path]:
     return train, new
 
 
-def shoot(page: Page, name: str, out: Path) -> None:
-    page.evaluate(
-        "sel => document.querySelectorAll(sel).forEach(e => e.remove())", NOTE_SELECTORS
+def churn_csvs(directory: Path) -> tuple[Path, Path]:
+    """Two tables to join: customers (one row each, with the column to predict) and their
+    purchases (several rows per customer)."""
+    import numpy as np
+    import pandas as pd
+
+    rng = np.random.default_rng(0)
+    n = 300
+    customers = pd.DataFrame(
+        {
+            "customer_id": np.arange(1, n + 1),
+            "age": rng.integers(18, 80, n),
+            "plan": rng.choice(["basic", "standard", "premium"], n),
+            "churned": rng.choice(["no", "yes"], n, p=[0.8, 0.2]),
+        }
     )
+    purchases = pd.DataFrame(
+        {
+            "customer_id": rng.integers(1, n + 1, 1500),
+            "amount": rng.gamma(2.0, 30.0, 1500).round(2),
+            "items": rng.integers(1, 6, 1500),
+        }
+    )
+    first, second = directory / "customers.csv", directory / "purchases.csv"
+    customers.to_csv(first, index=False)
+    purchases.to_csv(second, index=False)
+    return first, second
+
+
+def shoot(page: Page, name: str, out: Path) -> None:
     page.wait_for_timeout(400)
     out.mkdir(parents=True, exist_ok=True)
     page.screenshot(path=str(out / f"{name}.png"), full_page=name in FULL_PAGE)
@@ -59,6 +87,7 @@ def run(base: str, token: str) -> None:
 
     with tempfile.TemporaryDirectory() as tmp, sync_playwright() as p:
         train_csv, new_csv = iris_csvs(Path(tmp))
+        customers_csv, purchases_csv = churn_csvs(Path(tmp))
         browser = p.chromium.launch()
 
         def context(locale: str):
@@ -95,10 +124,6 @@ def run(base: str, token: str) -> None:
         page.wait_for_url("**/projects/*")
         project = page.url.removeprefix(base)
 
-        page.goto("/admin/system")
-        expect(page.locator("section[aria-labelledby=llm-title] .badge-success")).to_be_visible(
-            timeout=60_000
-        )
         page.goto(project + "/upload")
         page.set_input_files("#upload-file", str(train_csv))
         page.click("form[data-upload-form] button[type=submit]")
@@ -130,7 +155,8 @@ def run(base: str, token: str) -> None:
         page.wait_for_url("**/result", timeout=120_000)
         result = page.url.removeprefix(base)
         expect(page.locator("#why .why-row")).to_have_count(3, timeout=60_000)
-        ctx.storage_state(path=str(Path(tmp) / "state.json"))
+        state = str(Path(tmp) / "state.json")
+        ctx.storage_state(path=state)
         ctx.close()
 
         pages = {
@@ -150,6 +176,7 @@ def run(base: str, token: str) -> None:
             "users": "/admin/users",
             "account": "/account",
             "modules": "/modules",
+            "system": "/admin/system",
         }
         for locale, out in (
             ("en-US", ROOT / "guide" / "img"),
@@ -160,7 +187,7 @@ def run(base: str, token: str) -> None:
                 viewport=VIEWPORT,
                 locale=locale,
                 color_scheme="light",
-                storage_state=str(Path(tmp) / "state.json"),
+                storage_state=state,
             )
             page = ctx.new_page()
             if locale == "ja-JP":
@@ -177,6 +204,44 @@ def run(base: str, token: str) -> None:
             anon_page.goto("/login")
             shoot(anon_page, "login", out)
             anon.close()
+            ctx.close()
+
+        # a second project with two training tables, for the Join datasets card (after the
+        # shots above, so that the project list shows Iris alone)
+        ctx = browser.new_context(base_url=base, viewport=VIEWPORT, storage_state=state)
+        page = ctx.new_page()
+        page.goto("/")
+        page.fill("#project-name", "Churn")
+        page.click("#new-project button[type=submit]")
+        page.click(".project-card__link:text-is('Churn')")
+        page.wait_for_url("**/projects/*")
+        churn = page.url.removeprefix(base)
+        for csv in (customers_csv, purchases_csv):
+            page.goto(churn + "/upload")
+            page.set_input_files("#upload-file", str(csv))
+            page.click("form[data-upload-form] button[type=submit]")
+            page.wait_for_url("**/analyze")
+        ctx.close()
+        for locale, out in (
+            ("en-US", ROOT / "guide" / "img"),
+            ("ja-JP", ROOT / "ja" / "guide" / "img"),
+        ):
+            ctx = browser.new_context(
+                base_url=base,
+                viewport=VIEWPORT,
+                locale=locale,
+                color_scheme="light",
+                storage_state=state,
+            )
+            page = ctx.new_page()
+            if locale == "ja-JP":
+                page.goto("/login")
+            page.goto(f"{churn}/datasets")
+            page.select_option("#join-target", "churned")
+            page.click("[data-join-form] button[type=submit]")
+            expect(page.locator("[data-join=proposal]")).to_be_visible(timeout=60_000)
+            page.evaluate("window.scrollTo(0, 0)")
+            shoot(page, "join", out)
             ctx.close()
         browser.close()
     print("done")

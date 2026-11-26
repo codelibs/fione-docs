@@ -40,7 +40,7 @@ The file needs a header row with the column names and one example per row. Inclu
 - **Which columns should the model learn from?** Checked columns are the inputs. Fione unchecks columns that would not help, with the reason shown: a column that is a copy of the answer, a column whose value decides it, a column that only identifies rows, or a column with one value. A column that predicts the answer suspiciously well on its own stays checked, with a warning: check that its value is known when you make predictions.
 - **Maximum run time.** Choose **1 min**, **3 min**, **10 min**, **30 min** or **Other** for a number of minutes of your own. Training stops when this time is up and keeps the best model found; longer runs can find better models. Fione starts from a time that suits the size of your data and tells you when it chose a longer one.
 
-Above these choices, the Assistant comments on the data in plain words and may propose a training run that you can start with one button (**Start training**). This needs a language model; without one the comment is replaced by a note that the assistant is not available, and you can continue by hand. See [Assistant](/guide/assistant).
+With the [assistant](/guide/assistant) on, it also comments on the data in plain words above these choices and may propose a training run that you can start with one button (**Start training**). The assistant is optional and off by default; the choices above are Fione's own and need no language model.
 
 For the iris data, keep the suggestions, choose **1 min** under **Maximum run time** and press **Run**.
 
@@ -60,7 +60,7 @@ The **Prediction summary** opens with:
 
 - the best model, and a **Rating** from 1 to 5 stars;
 - what the score means in plain words, measured on rows the model did not learn from, next to a simple guess for comparison;
-- a short comment from the Assistant (when a language model is available);
+- a short message from the **Guide** beside the stars, chosen by the rating (with the [assistant](/guide/assistant) on, the page also shows the assistant's comment);
 - **About this model**: the best model (or a blend of several models), the prediction type, the models tried, the training time and why training stopped;
 - **Most useful inputs**: the columns the model relied on most.
 
@@ -123,4 +123,4 @@ Choose **Detailed** under **View** in the account menu (your name, top right) fo
 - diagnostics, explanations and leak warnings: see [Explanations and leak warnings](/guide/explanations);
 - project sharing: see [Users and sharing](/guide/users-sharing).
 
-Administrators also manage users, Python modules and the system status from the account menu. To drive Fione from Python, use [Python client (fione-sdk)](/guide/sdk). To ask questions about your data and models in plain language, use the [Assistant](/guide/assistant). To run Fione in production, see [Operations](/docs/operations).
+Administrators also manage users, Python modules and the system status from the account menu. To drive Fione from Python, use [Python client (fione-sdk)](/guide/sdk). To let AI tools such as Claude Code or Codex train and predict for you, see [Run the AutoML loop from an AI tool with MCP](/guide/mcp). To ask questions about your data and models in plain language in the browser, an administrator can turn on the optional [assistant](/guide/assistant). To run Fione in production, see [Operations](/docs/operations).

@@ -11,7 +11,7 @@ The detailed view of Fione is for people who want to see and set everything: the
 
 Open the account menu (your name, top right) and, under **View**, choose **Detailed**. The setting is remembered per browser. It only changes what you see, not what you may do: the same roles and permissions apply in both views.
 
-In the detailed view a project's menu also shows **Models** and **Jobs**, in addition to **Overview**, **Datasets** and **Assistant**. The owner also sees **Sharing** (see [Users and sharing](/guide/users-sharing)). Datasets get a **Train a model on this dataset** button that opens the full training settings.
+In the detailed view a project's menu also shows **Models** and **Jobs**, in addition to **Overview**, **Datasets** and, when the [assistant](/guide/assistant) is on, **Assistant**. The owner also sees **Sharing** (see [Users and sharing](/guide/users-sharing)). Datasets get a **Train a model on this dataset** button that opens the full training settings.
 
 ## Look at your data {#data-analysis}
 
@@ -49,6 +49,16 @@ Fione detects what each column holds, which decides how it is shown and which co
 | Date | Date types, and text where at least 95% of the values read as dates and at least half show a year, a month name or a time. A two-digit year is read as a year of the past. |
 | ID-like | A whole-number or short text column in which every value is different (at least 20 values). It cannot help to predict. Running text in which every value differs is Text. |
 | One value | The same value in every row. It cannot help to predict. |
+
+## Join datasets {#join-datasets}
+
+When the data of one table is spread over several (customers and their purchases, sales and the stores), upload each table as training data. When two or more of the project's 8 oldest datasets are training datasets, the project's dashboard and its **Datasets** page show **Join datasets**, in both views. Choose the **Column to predict** and press **Propose a join**: Fione looks for the columns that link the datasets, by their names and values, and proposes the first join. No language model is used.
+
+![The Join datasets card with a Join proposal](./img/join.png)
+
+The base is the dataset that has the column to predict, and the dataset to add is the one its best link joins to. When the dataset to add has several rows per key, they are summarized to one row per key (the number of rows, and the mean, minimum, maximum and sum of each number). The **Join proposal** shows the base dataset, the dataset to add, the key, whether the rows are summarized, the columns added and what to check (a key that repeats, few matching keys, a result over the limit). Anyone who can read the project sees it; a person who can edit the project presses **Create the joined dataset**, which starts a Join job and opens it. Fione checks the proposal again before the job starts. The result is a new dataset, and the base dataset stays as it is. Join only what is known when the model predicts: a summary of purchases that include the period to predict leaks the answer.
+
+The search reads the 8 oldest datasets of the project, whose columns the list offers, and stops after 30 seconds; two searches run at once on the server, and another is asked to wait. To join two datasets of your choice, or to set the summary's statistics, run the **Join datasets by key columns** module (see [Python modules](/guide/python-modules#joining)). AI tools get the same proposal over MCP with `propose_first_join` (see [MCP](/docs/mcp#proposals)).
 
 ## Training settings {#training-settings}
 
@@ -185,7 +195,7 @@ Explanation jobs, which are queued after each training (unless the server is set
 
 A model's page has these tabs:
 
-- **Overview**: the rating, a comment from the Assistant, the best model (often a blend of several), the training data, the number of models tried, the training time and the training settings. Its **Serving** card offers the serving bundle for [Fione Serving](/docs/serving).
+- **Overview**: the rating with the **Guide**'s message (and the assistant's comment when it is on), the best model (often a blend of several), the training data, the number of models tried, the training time and the training settings. Its **Serving** card offers the serving bundle for [Fione Serving](/docs/serving).
 - **Leaderboard**: one row per model, up to three per algorithm tried (named like `LightGBM_12`: the algorithm and the number of the try), best first, scored by the **Ranking metric** on rows the models did not learn from (**CV score**), with the **Spread over folds**, the **Weight** in the final blend, the **Training time** and the **Settings of its best try**. The **Ensemble** row is the blend, ranked with the others. Only the algorithms with a weight above 0 are in the final model.
 - **Importance**: the inputs the model relied on most, as a share of everything it used. It comes from how the models were built (gain for boosting, impurity for forests, weights for the linear model and the neural network); a derived feature counts for the columns it reads. For importance worked out from the predictions themselves, see [Model explanations](/guide/explanations).
 - **Explain**: importance from each column's contributions, partial dependence curves and the means to compute them again. See [Model explanations](/guide/explanations).

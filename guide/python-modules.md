@@ -17,7 +17,7 @@ Open the account menu and choose **Python modules**. Administrators always see t
 
 Everyone who can sign in can see the list. Running a module needs write access to the project, and uploading or deleting one needs the administrator role.
 
-Modules run as jobs through the [Python client](/guide/sdk), the [REST API](/docs/rest-api) or an [MCP client](/guide/mcp); the page itself is the catalogue. The assistant can also propose a join for you to confirm (see [The assistant](/guide/assistant)).
+Modules run as jobs through the [Python client](/guide/sdk), the [REST API](/docs/rest-api) or an [MCP client](/guide/mcp); the page itself is the catalogue. The **Join datasets** card of a project proposes a join for you to confirm, with no language model (see [Join datasets](/guide/automl#join-datasets)); so can the optional [assistant](/guide/assistant).
 
 ## Kinds of modules
 

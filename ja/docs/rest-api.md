@@ -215,7 +215,7 @@ curl -X POST http://localhost:8080/api/v1/models/1/contributions \
 | `GET /projects/{project_id}/datasets/{dataset_id}/preview?rows=50` | 先頭の行（最大 200）を `{"columns": [...], "rows": [[...]]}` の形で。 | 読み取り |
 | `GET /projects/{project_id}/datasets/{dataset_id}/profile` | データセット全体から散らばるように取った約 100,000 行の標本の、列の統計量、ヒストグラム、相関（`n_rows` はデータセットの行数、`sample_rows` は標本の行数）。`?target=<列名>` を付けるとリークの疑いも返します。 | 読み取り |
 | `GET /projects/{project_id}/datasets/{dataset_id}/columns/{column}` | 1 列のプロファイル。 | 読み取り |
-| `PUT /uploads/{token}` | MCP のツール `create_upload_url` が返す 1 回限りのアップロード URL に、CSV をそのまま本文として送ります（[MCP](/ja/guide/mcp)を参照）。応答はデータセットのアップロードと同じです。API トークンは不要で、URL 自体が資格情報です。不明・使用済み・期限切れの URL や、MCP またはその書き込みスイッチがオフのときは 404、上限を超えるファイルは 413、CSV として読めないときは 422 `invalid_csv` を返します。 | URL を持つ人 |
+| `PUT /uploads/{token}` | MCP のツール `create_upload_url` が返す 1 回限りのアップロード URL に、CSV をそのまま本文として送ります（[MCP](/ja/guide/mcp)を参照）。応答はデータセットのアップロードと同じです。API トークンは不要で、URL 自体が資格情報です。不明・使用済み・期限切れの URL や、MCP またはその変更を行うツールがオフのときは 404、上限を超えるファイルは 413、CSV として読めないときは 422 `invalid_csv` を返します。 | URL を持つ人 |
 
 ### ジョブ
 

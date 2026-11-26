@@ -12,9 +12,9 @@ const SITE = 'https://fione.codelibs.org'
 const SITE_NAME = 'Fione'
 const GITHUB_REPO = 'https://github.com/codelibs/fione'
 const SITE_DESC_EN =
-  'Fione is an open-source AutoML server: train a model from a CSV and use its predictions from AI tools such as Claude and Codex over MCP, from your own service through the API, or in the browser. Self-hosted with one docker compose up.'
+  'Fione is an open-source AutoML server: train a model from a CSV and use its predictions from AI tools such as Claude Code or Codex over MCP, from your own service through the API, or in the browser. Self-hosted with one docker compose up.'
 const SITE_DESC_JA =
-  'Fione はオープンソースの AutoML サーバーです。CSV からモデルを学習し、その予測を MCP で Claude や Codex などの AI ツールから、API で自分のサービスから、ブラウザーから使えます。docker compose up だけで動かせます。'
+  'Fione はオープンソースの AutoML サーバーです。CSV からモデルを学習し、その予測を MCP で Claude Code や Codex などの AI ツールから、API で自分のサービスから、ブラウザーから使えます。docker compose up だけで動かせます。'
 const OG_IMAGE = `${SITE}/og-image.png`
 
 // ---------------------------------------------------------------------------
@@ -159,7 +159,8 @@ function docsSidebar(lang: 'en' | 'ja'): DefaultTheme.SidebarItem[] {
         { text: t('Configuration', '設定'), link: `${p}/configuration` },
         { text: t('Fione Serving', 'Fione Serving'), link: `${p}/serving` },
         { text: t('REST API', 'REST API'), link: `${p}/rest-api` },
-        { text: t('Assistant setup and MCP', 'アシスタントの設定と MCP'), link: `${p}/assistant` },
+        { text: t('MCP', 'MCP'), link: `${p}/mcp` },
+        { text: t('Assistant setup', 'アシスタントの設定'), link: `${p}/assistant` },
       ],
     },
     {

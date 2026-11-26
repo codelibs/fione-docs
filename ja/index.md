@@ -1,12 +1,12 @@
 ---
 layout: home
 title: Fione
-description: Fione はオープンソースの AutoML サーバーです。CSV からモデルを学習し、その予測を Claude や Codex などの AI ツールから、自分のサービスから、ブラウザーから使えます。自分のサーバーで動きます。
+description: Fione はオープンソースの AutoML サーバーです。CSV からモデルを学習し、その予測を Claude Code や Codex などの AI ツールから、自分のサービスから、ブラウザーから使えます。自分のサーバーで動きます。
 
 hero:
   name: Fione
   text: AI から使える予測
-  tagline: 自分のサーバーで動かすオープンソースの AutoML。CSV からモデルを作り、Claude や Codex などの AI ツールから、自分のサービスから API で、ブラウザーから予測できます。機械学習の専門知識は要りません。
+  tagline: 自分のサーバーで動かすオープンソースの AutoML。CSV からモデルを作り、Claude Code や Codex などの AI ツールから、自分のサービスから API で、ブラウザーから予測できます。機械学習の専門知識は要りません。
   image:
     src: /fione-logo.svg
     alt: Fione
@@ -23,7 +23,7 @@ hero:
 
 features:
   - title: AI ツールから使える
-    details: MCP を有効にすると、Claude Code や Codex など MCP に対応した AI ツールが Fione サーバー上で CSV のアップロード、学習、結果の確認、予測を行い、わかったことを説明してくれます。
+    details: API トークンを渡せば、Claude Code や Codex などの AI ツールが MCP で Fione サーバー上の CSV のアップロード、学習、結果の確認、予測を行い、わかったことを説明してくれます。言語モデルは AI ツールの側のものを使います。
   - title: 機械学習の知識は不要
     details: EasyML ウィザードに沿って進めるだけで、CSV から星で評価されたモデルと予測ファイルが得られます。スコアの意味も平易な言葉で説明します。
   - title: 自分のサービスで予測

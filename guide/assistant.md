@@ -1,21 +1,21 @@
 ---
 title: "Using the assistant"
-description: "Ask the Fione assistant about your datasets and models, read its comments, and confirm its training or join proposals. It only reads and never acts alone."
+description: "Ask the optional Fione assistant about your datasets and models, read its comments, and confirm its training or join proposals. It only reads."
 ---
 
 # Using the assistant
 
-The assistant answers questions about a project's datasets and models in plain language, and can suggest a training run that a person then confirms.
+The assistant is an optional chat in the browser: it answers questions about a project's datasets and models in plain language, comments on pages, and can suggest a training run that a person then confirms.
 
 The assistant reads, and only reads. It cannot start a training, change a dataset or delete anything. A training it suggests starts only when someone who can edit the project presses the button on the suggestion.
 
-Before it can answer, an administrator has to connect a language model. That setup, what is sent to the model and the optional MCP endpoint are described in [Assistant setup, privacy and MCP](/docs/assistant). To drive Fione from Claude Code, Codex or another MCP client instead, see [Run the AutoML loop from an AI tool with MCP](/guide/mcp).
+The assistant is off by default: it needs a language model, which an administrator connects (`FIONE_LLM_PROVIDER`). While it is off, no page shows it: the project's **Assistant** tab, the **Ask the assistant** links and the assistant's comments are not there, and everything else works as usual. That setup and what is sent to the model are described in [Assistant setup and privacy](/docs/assistant). AI tools such as Claude Code or Codex need no assistant: they bring their own language model and use Fione over MCP (see [Run the AutoML loop from an AI tool with MCP](/guide/mcp)).
 
 ## The first start
 
-The assistant needs a language model. The model is a large download (about 8 GB for the Ollama server in Compose), and the **System status** page shows its progress.
+Once an administrator has turned the assistant on, it needs its language model. The model is a large download (about 8 GB for the Ollama server in Compose), and the **System status** page shows its progress.
 
-When the assistant cannot answer (the server is not reachable, the model is missing or being downloaded, the API key is refused, or an administrator has not yet allowed sending data to a remote server), every signed-in person sees a banner on each page that says why. For administrators the banner links to the **System status** page, or to **Assistant setup** (the link reads **Finish the assistant setup**) when the consent is missing. Inside a project, everyone else gets a link to its assistant. The **Assistant** page and the **Assistant setup** page have no banner: they say the same in their own body, and the question box of the **Assistant** page is disabled. Everything else in Fione keeps working.
+When the assistant is on but cannot answer (the server is not reachable, the model is missing or being downloaded, the API key is refused, or an administrator has not yet allowed sending data to a remote server), every signed-in person sees a banner on each page that says why. For administrators the banner links to the **System status** page, or to **Assistant setup** (the link reads **Finish the assistant setup**) when the consent is missing. Inside a project, everyone else gets a link to its assistant. The **Assistant** page and the **Assistant setup** page have no banner: they say the same in their own body, and the question box of the **Assistant** page is disabled. Everything else in Fione keeps working.
 
 ## Ways to ask
 
@@ -27,7 +27,7 @@ Conversations are private: only you can see yours, administrators included.
 
 ## Automatic comments
 
-A model's summary and model pages, the page of a failed training, the data analysis and dataset pages of a training dataset, and the result page of a finished batch prediction show an **Assistant's comment**: a short explanation in plain words.
+With the assistant on, a model's summary and model pages, the page of a failed training, the data analysis and dataset pages of a training dataset, and the result page of a finished batch prediction show an **Assistant's comment**: a short explanation in plain words. (The short message labelled **Guide** beside a model's star rating is not the assistant: it is fixed text chosen by the rating, shown with the assistant off too.)
 
 - For a model it says whether the result is good, mediocre or poor against the baseline, what mostly drives the prediction, any problem in the data and one to three next steps.
 - For a failed training, it says why it failed and what to change.
@@ -58,12 +58,14 @@ The assistant proposes each join as a **Join proposal** card in the conversation
 
 Join only what is known when the model predicts: a summary of purchases that include the period to predict leaks the answer.
 
+The first join for a column to predict needs no assistant: the **Join datasets** card of the project's dashboard and **Datasets** page proposes it with links found by names and values alone (see [Join datasets](/guide/automl#join-datasets)).
+
 - Key columns are read whole up to 5 million rows; a larger dataset is sampled, and a link between two such datasets can be missed.
-- Only the first 8 datasets of a project are examined, and the search stops after 30 seconds (the result says so).
+- Only the 8 oldest datasets of a project are examined, and the search stops after 30 seconds (the result says so).
 - A module's result may have at most 150 million cells (rows times columns). Joining several summaries onto a wide dataset can pass it; drop the columns you do not need with the **Slice columns** module before you join.
 
 ## Limits
 
-A question can have up to 4,000 characters, and a conversation up to 100 questions. You can keep up to 100 conversations per project, and three answers can run or wait for you at once. All limits are listed in [Assistant setup, privacy and MCP](/docs/assistant).
+A question can have up to 4,000 characters, and a conversation up to 100 questions. You can keep up to 100 conversations per project, and three answers can run or wait for you at once. All limits are listed in [Assistant setup and privacy](/docs/assistant).
 
 An answer that is still running when Fione restarts ends as interrupted; ask again.
