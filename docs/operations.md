@@ -12,7 +12,7 @@ This page covers the day-to-day care of a Fione installation that runs with the 
 | Where | What it holds |
 |---|---|
 | Docker volume `fione_fione-data` (`/data` in the `fione` container) | The SQLite database (users, projects, jobs and the other metadata), the **secret key** (`secret.key`), the setup token while no administrator exists, job logs and temporary files. |
-| Docker volume `fione_seaweed-data` | The datasets and trained models, stored by SeaweedFS (S3-compatible). |
+| Docker volume `fione_seaweed-data` | The datasets, trained models, model exports and uploaded Python modules, stored by SeaweedFS (S3-compatible). |
 | `docker/.env` | The S3 credentials Fione and SeaweedFS share, and any optional settings you added. It is not in a volume. |
 | Docker volume `fione_ollama-data` | The language model files, only when you use the `ollama` Compose profile. |
 
@@ -70,7 +70,7 @@ To upgrade to a newer version of Fione 20:
 
 1. Back up, as above.
 2. Keep the current serving image under another name. Rebuilding the serving image replaces `ghcr.io/codelibs/fione-serving:dev`, and you may still need the old one (see below).
-3. Get the new version and rebuild Fione and the serving image:
+3. Get the new version and rebuild Fione and the serving image. If you changed `docker/compose.yaml` (for example its `environment` section), commit or stash that change before `git pull` and apply it again afterwards. Skip the `docker tag` line if you never built the serving image.
 
 ```sh
 docker tag ghcr.io/codelibs/fione-serving:dev fione-serving:before-upgrade
@@ -79,7 +79,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 docker compose -f docker/compose.yaml --env-file docker/.env --profile serving build fione-serving
 ```
 
-Your data stays. Afterwards, an administrator can check the **Version** and **Image tag** on the **System status** page (account menu).
+Your data stays: the database is upgraded at the first start of the new version. To go back, restore the backup made before the upgrade; do not start an older version on upgraded data. Afterwards, an administrator can check the **Version** and **Image tag** on the **System status** page (account menu).
 
 **Models and image tags.** Every trained model records the tag of the image that trained it, and Fione Serving only loads models of its own tag. Models trained by an older version are also not guaranteed to load in a newer one, because they are pickles of Fione's code. After an upgrade, retrain the models you rely on. Until then, serve their bundles with the image you kept: in the `docker run` command, replace `ghcr.io/codelibs/fione-serving:dev` with `fione-serving:before-upgrade`.
 

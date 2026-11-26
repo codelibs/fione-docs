@@ -82,13 +82,18 @@ predictions = fione.predict(project["id"], model_id, new_rows)  # "predict" 列�
 | `max_runtime_secs_per_model` | なし | 1 つのモデルの学習時間の上限。 |
 | `max_models` | なし | この数のモデルを試したら止めます。 |
 | `nfolds` | `5` | 交差検証の分割数（2 以上）。 |
+| `cv_repeats` | 行数による | 別のシードで分割をやり直す回数（1〜10）。既定では 2,000 行までは 3、5,000 行までは 2、それ以上は 1。 |
+| `cv_group_column` | なし | この列の値が同じ行は同じ分割に入ります（顧客ごとに複数行がある場合など）。 |
+| `time_column` | なし | 時間の先を検証します。この数値または日付の列で並べた行をいくつかに区切り、各分割は予測する部分より前の部分から学習します。 |
 | `seed` | `0` | 同じ値なら同じ分割と探索になります。 |
 | `balance_classes` | `False` | 少数のクラスに大きな重みを付けて学習します。 |
-| `decision` | `"argmax"` | `"argmax"` か `"balanced"`（クラスの大きさで調整）。`balance_classes` とは併用できません。 |
-| `target_transform` | `"none"` | `"none"` か `"log1p"`（回帰のみ）。 |
+| `decision` | `"argmax"` | `"argmax"`、`"balanced"`（クラスの大きさで調整）、`"tuned"`（判定のしきい値を `sort_metric` に合わせます。2 クラス、または順序のあるクラスで `qwk` のとき）。`balance_classes` とは併用できません。回帰では無視されます。 |
+| `target_transform` | `"none"` | `"none"` か `"log1p"`（回帰のみ。分類では無視されます）。 |
+| `quantile` | なし | 回帰の目的変数の平均ではなく、この分位点（0 と 1 の間）を pinball 損失で学習します。 |
+| `event_column` | なし | 生存時間：目的変数は途中で打ち切られうる時間で、この 0/1 の列はその時点でイベントが起きたかを示します。モデルは `concordance` で順位付けされます。`quantile` や `target_transform` とは併用できません。 |
 | `feature_engineering` | `True` | 明らかに効果のある派生特徴量を追加します。 |
 | `stopping_rounds`、`stopping_metric`、`stopping_tolerance` | `10`、`"auto"`、`0.001` | モデルの種類ごとの早期停止。 |
-| `sort_metric` | `"auto"` | リーダーボードの順位付けに使うスコア。 |
+| `sort_metric` | `"auto"` | リーダーボードの順位付けに使うスコア：`auto`、または `logloss`、`auc`、`aucpr`、`accuracy`、`balanced_accuracy`、`f1`、`macro_f1`、`precision`、`recall`、`mcc`、`kappa`、`qwk`、`rounded_qwk`、`brier`、`balanced_logloss`、`top3_accuracy`、`map3`、`gini`、`normalized_gini`、`lift_top_group`、`misclassification`、`mean_per_class_error`、`rmse`、`mse`、`mae`、`medae`、`r2`、`rmsle`、`mape`、`rmspe`、`smape`、`explained_variance`、`pearson`、`spearman`、`poisson`、`pinball`（`quantile` と併用）、`concordance`（`event_column` と併用）のうちタスクに合うもの。`stopping_metric` も同じ名前を取ります。 |
 | `keep_cv_predictions`、`keep_cv_models`、`keep_cv_fold_assignment` | `False` | 交差検証の結果を残します（モデルを残すとモデルファイルがかなり大きくなります）。 |
 | `ignored_columns` | `[]` | 入力として使わない列。 |
 
@@ -105,9 +110,9 @@ Web アプリの学習画面にも同じ設定があります（[AutoML 画面](
 
 ### 予測
 
-`predict(project_id, model_id, df, *, include_columns=None, timeout=None)` は、DataFrame を一時的なデータセットとしてアップロードし、サーバー上で予測し、結果を行の順序どおりに読み戻して、一時的なデータセットを削除します。予測が失敗したりタイムアウトしたりしたときも、アップロードしたデータセットは削除されます。`timeout` 秒後（または失敗時）には、バッチ予測のジョブをキャンセルして `TimeoutError`（または `JobFailed`）を送出します。
+`predict(project_id, model_id, df, *, include_columns=None, timeout=None)` は、DataFrame を一時的なデータセットとしてアップロードし、サーバー上で予測し、結果を行の順序どおりに読み戻して、一時的なデータセットを削除します。予測が失敗したりタイムアウトしたりしたときも、アップロードしたデータセットは削除されます。`timeout` 秒後には、バッチ予測のジョブをキャンセルして `TimeoutError` を送出します。ジョブが失敗したときは `JobFailed` を送出します。プロジェクトへの書き込み権限が必要です。
 
-結果には、予測値またはクラスを表す `predict` 列があり、分類ではクラスごとの確率を表す `p_<クラス名>` 列も付きます。既定では入力列が続きます。一部だけを含めたいときは `include_columns=[...]` を渡します。結果のデータセットはプロジェクトに残るので、プロジェクトのデータセットからあとで見つけられます。
+結果には、予測値またはクラスを表す `predict` 列があり、分類ではクラスごとの確率を表す `p_<クラス名>` 列も付きます。既定では入力列が続きます。一部だけを含めたいときは `include_columns=[...]` を渡します。結果のデータセット（名前は `predict_sdk_predict_<8 文字>`）はプロジェクトに残るので、プロジェクトのデータセットからあとで見つけられます。不要になったものは削除してください。
 
 ## データセットとモデル
 

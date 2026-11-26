@@ -41,7 +41,7 @@ unzip fione-serving-*.zip
 docker run --rm -p 8081:8080 -v "$PWD/model:/model:ro" ghcr.io/codelibs/fione-serving:dev
 ```
 
-The API listens on port 8080 in the container (`-p 8081:8080` publishes it on 8081, on every network interface of the host). **The API has no authentication** and no rate or concurrency limit for predictions beyond the request size limits below (only requests for [contributions](#contributions) are limited in number at once). To keep it on this machine, publish it as `-p 127.0.0.1:8081:8080`, and put a reverse proxy with authentication in front of it to serve others. The process runs as a non-root user and only reads `/model`.
+The API listens on port 8080 in the container (`-p 8081:8080` publishes it on 8081, on every network interface of the host). **The API has no authentication** and no rate limit: every prediction request within the size limits below is accepted, and the requests are computed one at a time (only requests for [contributions](#contributions) are refused beyond a number at once). To keep it on this machine, publish it as `-p 127.0.0.1:8081:8080`, and put a reverse proxy with authentication in front of it to serve others. The process runs as a non-root user and only reads `/model`.
 
 If the model cannot be served, the container prints one line and exits with status 1, for example:
 

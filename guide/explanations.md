@@ -18,7 +18,7 @@ The model's tabs are part of the detailed view (see [AutoML screens](/guide/auto
 
 ## Diagnostics {#diagnostics}
 
-The **Metrics** tab of a model shows its cross-validation scores and, below them, charts and tables worked out from the **cross-validation predictions** of the final blend: for every training row, the prediction of models that did not learn from that row. They say how the model behaves on data it has not seen, in a way the single score cannot.
+The **Metrics** tab of a model shows its cross-validation scores and, below them, charts and tables worked out from the **cross-validation predictions** of the final blend: for every training row that the cross-validation checks (all rows, except the earliest part with **Order of the rows in time**), the prediction of models that did not learn from that row. They say how the model behaves on data it has not seen, in a way the single score cannot.
 
 The tab states how many rows they come from. Above 200,000 rows a random sample is used.
 
@@ -32,7 +32,7 @@ The tab states how many rows they come from. Above 200,000 rows a random sample 
 
 - **Residuals**: a histogram (30 bins) of actual minus predicted. A positive residual means the model predicted too low.
 - **Actual and predicted values**: a scatter of up to 2,000 randomly chosen rows, in random order; a point on the dashed diagonal was predicted exactly.
-- The mean residual in each tenth of the rows, ordered by predicted value, shows whether the model is biased in some range.
+- The mean residual in each tenth of the rows, ordered by predicted value (the text alternative of the scatter, and `by_decile` in the REST API), shows whether the model is biased in some range.
 
 ### Good to know
 
@@ -61,7 +61,7 @@ Choose a column under **How the prediction changes with one input** and press **
 
 - Numbers use up to 20 points from the 2nd to the 98th percentile of the column, so rare extremes are left out. A category uses its most frequent levels (up to 19) and a point for missing values. Times are in UTC. Levels the model never saw in training can appear; the model treats them as unknown.
 - Columns whose curve is already stored are marked **(ready)**. For any other column of the model, the curve is computed on the spot from at most 300 rows, so its points can differ slightly from stored curves.
-- For classification, choose the class under **Show the chance of**; for regression the curve is the predicted value.
+- For more than two classes, choose the class under **Show the chance of**; for two classes the curve is the probability of the second class, and for regression the predicted value.
 
 ## Each prediction's contributions {#contributions}
 
@@ -71,9 +71,9 @@ A contribution says how much one input column moved one prediction away from the
 bias + contribution(column 1) + contribution(column 2) + ... = the prediction
 ```
 
-The sum holds to rounding. The unit is the prediction's own: probability points for classification (not log-odds), the target's units for regression. Fione explains one output per row: for two classes the probability of the second class (the last `p_` column), for more classes the predicted class (the REST API accepts a `class_index` for another), and for regression the value.
+The sum holds to rounding, except where the delivered prediction is adjusted after the blend: probabilities shifted for **Balanced log loss**, a regression kept at 0 or more, and whole ratings from **Quadratic weighted kappa of rounded predictions**; the contributions then add up to the blend's raw output. The unit is the prediction's own: probability points for classification (not log-odds), the target's units for regression. Fione explains one output per row: for two classes the probability of the second class (the last `p_` column), for more classes the predicted class (the REST API accepts a `class_index` for another), and for regression the value.
 
-The contributions are approximate. Each ensemble member contributes natively: TreeSHAP for LightGBM, XGBoost and CatBoost, path contributions for RandomForest and ExtraTrees, the exact coefficient times the distance from the training mean for Linear and TextLinear, and integrated gradients for DeepLearning. They are converted to probabilities and combined over the ensemble. Exact Shapley values exist only for each booster on its own, before that conversion. A derived feature counts for the columns it reads, split equally when it reads several.
+The contributions are approximate. Each ensemble member contributes natively: TreeSHAP for LightGBM, XGBoost and CatBoost, path contributions for RandomForest and ExtraTrees, the exact coefficient times the distance from the training mean for Linear, LinearWide and the TextLinear variants, both of these for LinearBoost, and integrated gradients for DeepLearning. They are converted to probabilities and combined over the ensemble. Exact Shapley values exist only for each booster on its own, before that conversion. A derived feature counts for the columns it reads, split equally when it reads several.
 
 ### In the prediction results
 
@@ -117,11 +117,11 @@ You see the result in the data analysis of the wizard (see [EasyML](/guide/easym
 There are two levels:
 
 - **Exact leaks are unchecked.** A column identical to the column to predict, or each of whose values always comes with the same answer, is left out of the inputs by default, with the reason. (Columns that only identify rows are unchecked too, as IDs.)
-- **Suspicious columns stay checked, with a warning.** A column that predicts the answer on its own suspiciously well, one whose values (or where they are missing) follow the answer, such as an ID or a date when rows were added in order of the answer, and one that moves almost exactly with the answer (a correlation of 0.99 or more in absolute value). Check that the value is really known when you make predictions, and uncheck the column if it is not.
+- **Suspicious columns stay checked, with a warning.** A column that predicts the answer on its own suspiciously well, one whose values (or where they are missing) follow the answer, such as a date when rows were added in order of the answer, and one that moves almost exactly with the answer (a correlation of 0.99 or more in absolute value). Check that the value is really known when you make predictions, and uncheck the column if it is not.
 
 How the score works: each column alone is cut into bins and used to predict the column to predict out of fold, and the result is scored with AUC (classification; the mean one-against-rest AUC for more than two classes) or R² (regression). A column is flagged at an AUC of 0.95 (R² of 0.90 for regression) and 0.10 above the best column under that line, or at 0.99 in any case.
 
-Warnings can be wrong in both directions: a strong legitimate column can be flagged, and a leak can be missed, so no warning does not mean no leak. See [Known limitations](/docs/known-limitations#explanations-and-leak-warnings) for the cases it misses. The check uses at most 10,000 rows, does not score data under 200 rows, and stops after 3 seconds, saying that some columns were not checked.
+Warnings can be wrong in both directions: a strong legitimate column can be flagged, and a leak can be missed, so no warning does not mean no leak. See [Known limitations](/docs/known-limitations#explanations-and-leak-warnings) for the cases it misses. The score of each column alone uses at most 10,000 rows, is not computed for data under 200 rows or for more than 100 classes, and stops after 3 seconds, saying that some columns were not checked; the other checks always run.
 
 ## Next steps
 

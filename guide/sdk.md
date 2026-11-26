@@ -82,13 +82,18 @@ predictions = fione.predict(project["id"], model_id, new_rows)  # a "predict" co
 | `max_runtime_secs_per_model` | none | Caps each model's training. |
 | `max_models` | none | Stops after this many models. |
 | `nfolds` | `5` | Cross-validation folds (2 or more). |
+| `cv_repeats` | by rows | How many times the folds are drawn again with other seeds (1 to 10); by default 3 up to 2,000 rows, 2 up to 5,000, else 1. |
+| `cv_group_column` | none | Rows that share a value of this column stay in one fold (for example several rows per customer). |
+| `time_column` | none | Validates forward in time: the rows ordered by this number or date column are cut into parts, and each fold learns from the parts before the one it predicts. |
 | `seed` | `0` | The same seed gives the same splits and search. |
 | `balance_classes` | `False` | Gives rare classes more weight while learning. |
-| `decision` | `"argmax"` | `"argmax"` or `"balanced"` (adjusts for class sizes); not together with `balance_classes`. |
-| `target_transform` | `"none"` | `"none"` or `"log1p"` (regression only). |
+| `decision` | `"argmax"` | `"argmax"`, `"balanced"` (adjusts for class sizes) or `"tuned"` (fits the decision threshold to `sort_metric`; two classes, or `qwk` with ordered classes); not together with `balance_classes`. Ignored for regression. |
+| `target_transform` | `"none"` | `"none"` or `"log1p"` (regression only; ignored for classification). |
+| `quantile` | none | Learns this quantile (between 0 and 1) of a regression target instead of its mean, with the pinball loss. |
+| `event_column` | none | Survival: the target is a time that may be cut short, and this 0/1 column says whether the event happened. Models are ranked by `concordance`. Not with `quantile` or `target_transform`. |
 | `feature_engineering` | `True` | Adds derived features that clearly help. |
 | `stopping_rounds`, `stopping_metric`, `stopping_tolerance` | `10`, `"auto"`, `0.001` | Early stopping of a model family. |
-| `sort_metric` | `"auto"` | The score the leaderboard is ranked by. |
+| `sort_metric` | `"auto"` | The score the leaderboard is ranked by: `auto` or one of `logloss`, `auc`, `aucpr`, `accuracy`, `balanced_accuracy`, `f1`, `macro_f1`, `precision`, `recall`, `mcc`, `kappa`, `qwk`, `rounded_qwk`, `brier`, `balanced_logloss`, `top3_accuracy`, `map3`, `gini`, `normalized_gini`, `lift_top_group`, `misclassification`, `mean_per_class_error`, `rmse`, `mse`, `mae`, `medae`, `r2`, `rmsle`, `mape`, `rmspe`, `smape`, `explained_variance`, `pearson`, `spearman`, `poisson`, `pinball` (with `quantile`) and `concordance` (with `event_column`), as far as they fit the task. `stopping_metric` takes the same names. |
 | `keep_cv_predictions`, `keep_cv_models`, `keep_cv_fold_assignment` | `False` | Keep cross-validation results (the models make the model file much larger). |
 | `ignored_columns` | `[]` | Columns that are not used as inputs. |
 
@@ -105,9 +110,9 @@ Everything that takes time is a job on the server: training, batch prediction, m
 
 ### Predict
 
-`predict(project_id, model_id, df, *, include_columns=None, timeout=None)` uploads the frame as a temporary dataset, predicts on the server, reads the result back in the order of the rows and deletes the temporary dataset. The upload is deleted also when the prediction fails or times out. After `timeout` seconds (or on failure) it cancels its batch-prediction job and raises `TimeoutError` (or `JobFailed`).
+`predict(project_id, model_id, df, *, include_columns=None, timeout=None)` uploads the frame as a temporary dataset, predicts on the server, reads the result back in the order of the rows and deletes the temporary dataset. The upload is deleted also when the prediction fails or times out. After `timeout` seconds it cancels its batch-prediction job and raises `TimeoutError`; a job that failed raises `JobFailed`. It needs write access to the project.
 
-The result has a `predict` column with the predicted value or class and, for classification, one `p_<class>` column per class with its probability. By default the input columns follow; pass `include_columns=[...]` to copy only those. The result dataset stays in the project, so you can find it again among its datasets.
+The result has a `predict` column with the predicted value or class and, for classification, one `p_<class>` column per class with its probability. By default the input columns follow; pass `include_columns=[...]` to copy only those. The result dataset (named `predict_sdk_predict_<8 characters>`) stays in the project, so you can find it again among its datasets; delete the ones you no longer need.
 
 ## Datasets and models
 

@@ -11,7 +11,7 @@ description: Docker Compose で Fione をインストールし、シークレッ
 
 - Docker と Compose v2(Docker Desktop、または compose プラグイン付きの Docker Engine)。
 - イメージとビルドキャッシュ用に約 6 GB のディスク空き容量と、データ用の空き容量。
-- `git`、`openssl`、`unzip`、`curl`。
+- `git`、`openssl` (Fione Serving と REST API の例には `unzip` と `curl` も)。
 - 現在のブラウザ。ダークモードには Chrome または Edge 123 以降、Firefox 120 以降、Safari 17.5 以降が必要です(それより古いブラウザではライトテーマだけ使えます)。
 
 イメージは、Fione のリポジトリからお使いのマシン上でビルドします。amd64 と arm64(Apple シリコン)で動きます。
@@ -34,7 +34,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 
 ![最初の管理者を作成するページ](./img/setup.png)
 
-初回は機械学習ライブラリをダウンロードしてインストールするため、ビルドに数分かかります。`--wait` は、2 つのコンテナ(`fione` と `seaweedfs`)が正常になると戻ります。Fione は <http://127.0.0.1:8080/> で開きます。このポートは、このマシンだけに公開されています。ほかの人にも使ってもらうには、HTTPS のリバースプロキシを前に置いてください([設定](/ja/docs/configuration)のリバースプロキシの項を参照)。
+初回は機械学習ライブラリをダウンロードしてインストールするため、ビルドに数分かかります。`--wait` は、コンテナ(`fione` と `seaweedfs`、そのプロファイルでは `ollama` も)が正常になると戻ります。Fione は <http://127.0.0.1:8080/> で開きます。このポートは、このマシンだけに公開されています。ほかの人にも使ってもらうには、HTTPS のリバースプロキシを前に置いてください([設定](/ja/docs/configuration)のリバースプロキシの項を参照)。
 
 ## 3. 管理者を作成する
 

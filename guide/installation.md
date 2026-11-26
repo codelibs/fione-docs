@@ -11,7 +11,7 @@ This page takes you from nothing to a running Fione with an administrator accoun
 
 - Docker with Compose v2 (Docker Desktop, or Docker Engine with the compose plugin).
 - About 6 GB of disk space for the images and their build cache, plus room for your data.
-- `git`, `openssl`, `unzip` and `curl`.
+- `git` and `openssl` (and `unzip` and `curl` for the Fione Serving and REST API examples).
 - A current browser. Dark mode needs Chrome or Edge 123+, Firefox 120+ or Safari 17.5+; older ones get the light theme only.
 
 The images are built on your machine from the Fione repository, on amd64 or arm64 (Apple silicon).
@@ -34,7 +34,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 
 ![The first administrator page](./img/setup.png)
 
-The first build downloads and installs the machine-learning libraries and takes a few minutes. `--wait` returns when both containers (`fione` and `seaweedfs`) are healthy. Fione is then at <http://127.0.0.1:8080/>. The port is published on this machine only; to serve other people, put a reverse proxy with HTTPS in front of it (see the reverse proxy notes in [Configuration](/docs/configuration)).
+The first build downloads and installs the machine-learning libraries and takes a few minutes. `--wait` returns when the containers (`fione` and `seaweedfs`, and `ollama` with that profile) are healthy. Fione is then at <http://127.0.0.1:8080/>. The port is published on this machine only; to serve other people, put a reverse proxy with HTTPS in front of it (see the reverse proxy notes in [Configuration](/docs/configuration)).
 
 ## 3. Create the administrator
 
