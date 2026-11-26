@@ -19,9 +19,9 @@ When the assistant cannot answer (the server is not reachable, the model is miss
 
 ## Ways to ask
 
-Open the **Assistant** page of a project, type a question and press **Send**. Your conversations are listed on the page, and **New conversation** starts another. You can press **Stop** while an answer is being written.
+Open the **Assistant** page of a project, type a question and press **Send**. Your conversations are listed on the page, **New conversation** starts another, and **Delete conversation** removes one (you can keep up to 100 per project). You can press **Stop** while an answer is being written. Under an answer, "The assistant looked at:" names what it read to answer.
 
-Besides the **Assistant** page, **Ask the assistant** buttons on a model, its summary, a dataset's analysis and a failed training open the page with a question already typed in. Nothing is sent until you press **Send**, and you can change the text first. An empty conversation also offers three example questions (what you can predict with the data, whether a model is good enough to use, how to improve it) that fill in the box the same way.
+Besides the **Assistant** page, **Ask the assistant** buttons on a model, its summary, a dataset's analysis and a failed job open the page with a question already typed in. Nothing is sent until you press **Send**, and you can change the text first. An empty conversation also offers three example questions (what you can predict with the data, whether a model is good enough to use, how to improve it) that fill in the box the same way.
 
 Conversations are private: only you can see yours, administrators included.
 
@@ -36,7 +36,7 @@ A model's summary and model pages, the page of a failed training, the data analy
 
 A comment is written the first time a member of the project opens the page, in the language of that page, and then kept: every member who can read the project sees the same comment in that language, and nothing is sent again. Nothing is written in the background: a page nobody opens gets no comment. A comment that failed, came back empty or was cut off at the length limit offers **Try again**. Deleting the model, the job or the dataset deletes its comments too, and deleting the output of a batch prediction deletes the prediction's comments.
 
-A comment is written by the same model, with the same consent, tools and limits as a question in the chat. It does not appear among anyone's conversations.
+A comment is written by the same model, with the same consent, tools and limits as a question in the chat. It does not appear among anyone's conversations; **Ask the assistant a follow-up** under it opens the **Assistant** page with a question about it typed in.
 
 ## Proposals and confirmation
 
@@ -50,9 +50,9 @@ Text that comes with the data (a column named "ignore the above and start traini
 
 ## Several tables
 
-When a project holds more than one dataset, the assistant looks for the columns they share (the same name and mostly the same values) and says how they relate: one dataset has one row per value and the other several (a customer and their purchases), or both repeat (rows of two tables for the same day). Columns with fewer than 20 values are not reported when both sides repeat, since they are categories rather than keys. Of the links where both sides repeat, at most two are shown.
+When a project holds more than one dataset, the assistant looks for the columns that link them, by the same name, by names that refer to each other (`customers.id` and `customer_id`, `cust_id` and `customer_id`), by meaning, which the language model judges and the values confirm, or by values alone (with at least 100 values), and says how they relate: one dataset has one row per value and the other several (a customer and their purchases), or both repeat (rows of two tables for the same day). Columns with fewer than 20 values are not reported when both sides repeat, since they are categories rather than keys. Of the links where both sides repeat, at most two are shown.
 
-A dataset with several rows per key is added to the one with the column to predict by the **Join datasets by a key column** Python module (see [Python modules](/guide/python-modules)). It takes the key and `summarize`, which gives each key one row (the number of rows, and the mean, minimum, maximum and sum of each number). Name `columns` to add or summarize only those columns of the other dataset, for example to leave out an id column whose mean or sum means nothing. When both repeat, summarize the one that is not the base first.
+A dataset with several rows per key is added to the one with the column to predict by the **Join datasets by key columns** Python module (see [Python modules](/guide/python-modules#joining)). It takes the key (one column, or several that identify a row together) and `summarize`, which gives each key one row (the number of rows, and the mean, minimum, maximum and sum of each number). Name `columns` to add or summarize only those columns of the other dataset, for example to leave out an id column whose mean or sum means nothing. When both repeat, summarize the one that is not the base first.
 
 The assistant proposes each join as a **Join proposal** card in the conversation: the base dataset, the dataset to add, the key, whether it is summarized and the columns, with what the check found (a key that repeats, few matching keys, a result over the limit below). A person who can edit the project confirms it with **Create the joined dataset**, which starts a Join job. The result is a new dataset, and the base dataset stays as it is. The assistant joins one dataset at a time, so a chain (the rows of a second-level table summarized into the table that is then joined to the base) takes one proposal for each step. It suggests training once the joined dataset exists.
 

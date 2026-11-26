@@ -48,6 +48,7 @@ The web app signs in with `POST /auth/login` and a session cookie. A request tha
 - **Bodies.** Requests and responses are JSON (`Content-Type: application/json`), except file uploads (`multipart/form-data`) and downloads. A request body with a field the endpoint does not know is refused (`422`).
 - **Ids.** Projects have text ids such as `iris-demo-2e9b75`. Datasets, jobs, models, users and tokens have integer ids.
 - **Timestamps.** Projects, datasets and tokens carry `created_at` as `"YYYY-MM-DD HH:MM:SS"` in UTC. Jobs, models and job events carry Unix time in seconds.
+- **Status codes.** A request that creates something (a project, dataset, user, token, job, import or module) answers `201`; deleting one item, sharing and logging out answer `204` with no body.
 - **Lists** are returned as JSON arrays with no paging. `GET /jobs` returns the newest `limit` jobs (200 by default, at most 1000).
 - **Size limits.** A JSON body is at most 1 MiB. A CSV upload is at most `FIONE_MAX_UPLOAD_BYTES` (1 GiB by default; see [Configuration](/docs/configuration)). A model import is at most 512 MiB.
 - **Visibility.** A project you cannot read does not exist as far as you are concerned: you get `404`, not `403`. You get `403` when you can read the project but lack the access the call needs.
@@ -212,8 +213,9 @@ All paths are relative to `/api/v1`. The last column says who may call the endpo
 | `DELETE /projects/{project_id}/datasets/{dataset_id}` | Deletes the dataset. | Write |
 | `GET /projects/{project_id}/datasets/{dataset_id}/download` | The dataset as UTF-8 CSV. | Read |
 | `GET /projects/{project_id}/datasets/{dataset_id}/preview?rows=50` | The first rows (at most 200) as `{"columns": [...], "rows": [[...]]}`. | Read |
-| `GET /projects/{project_id}/datasets/{dataset_id}/profile` | Column statistics, histograms and correlations of the first 100,000 rows. With `?target=<column>`, also leak suspects. | Read |
+| `GET /projects/{project_id}/datasets/{dataset_id}/profile` | Column statistics, histograms and correlations of a sample of about 100,000 rows spread over the whole dataset (`n_rows` is the dataset's rows, `sample_rows` the rows profiled). With `?target=<column>`, also leak suspects. | Read |
 | `GET /projects/{project_id}/datasets/{dataset_id}/columns/{column}` | The profile of one column. | Read |
+| `PUT /uploads/{token}` | Takes the raw CSV as the body for a one-time upload URL from the MCP tool `create_upload_url` (see [MCP](/guide/mcp)); answers like a dataset upload. No API token: the URL is the credential. An unknown, used or expired URL, or MCP or its write switch off, answers 404; a file over the limit 413, a CSV that does not parse 422 `invalid_csv`. | Holder of the URL |
 
 ### Jobs
 

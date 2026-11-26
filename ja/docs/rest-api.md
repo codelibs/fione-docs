@@ -48,6 +48,7 @@ Web アプリは `POST /auth/login` とセッション Cookie でログインし
 - **本文**: リクエストとレスポンスは JSON（`Content-Type: application/json`）です。ファイルのアップロード（`multipart/form-data`）とダウンロードは例外です。エンドポイントが知らないフィールドを含む本文は拒否されます（`422`）。
 - **ID**: プロジェクトの ID は `iris-demo-2e9b75` のような文字列です。データセット、ジョブ、モデル、ユーザー、トークンの ID は整数です。
 - **日時**: プロジェクト、データセット、トークンの `created_at` は UTC の `"YYYY-MM-DD HH:MM:SS"` です。ジョブ、モデル、ジョブのイベントは秒単位の Unix 時間です。
+- **ステータスコード**: 何かを作るリクエスト（プロジェクト、データセット、ユーザー、トークン、ジョブ、インポート、モジュール）は `201` を、1 件の削除、共有、ログアウトは本文なしの `204` を返します。
 - **一覧**はページングなしの JSON 配列で返ります。`GET /jobs` は新しい順に `limit` 件（初期値 200、最大 1000）を返します。
 - **サイズの上限**: JSON 本文は 1 MiB まで、CSV のアップロードは `FIONE_MAX_UPLOAD_BYTES`（初期値 1 GiB。[設定リファレンス](/ja/docs/configuration)を参照）まで、モデルのインポートは 512 MiB までです。
 - **見え方**: 読めないプロジェクトは、あなたにとっては存在しないものとして扱われ、`403` ではなく `404` になります。プロジェクトを読めても、呼び出しに必要な権限がない場合は `403` です。
@@ -212,8 +213,9 @@ curl -X POST http://localhost:8080/api/v1/models/1/contributions \
 | `DELETE /projects/{project_id}/datasets/{dataset_id}` | データセットを削除します。 | 書き込み |
 | `GET /projects/{project_id}/datasets/{dataset_id}/download` | UTF-8 の CSV としてのデータセット。 | 読み取り |
 | `GET /projects/{project_id}/datasets/{dataset_id}/preview?rows=50` | 先頭の行（最大 200）を `{"columns": [...], "rows": [[...]]}` の形で。 | 読み取り |
-| `GET /projects/{project_id}/datasets/{dataset_id}/profile` | 先頭 100,000 行の列の統計量、ヒストグラム、相関。`?target=<列名>` を付けるとリークの疑いも返します。 | 読み取り |
+| `GET /projects/{project_id}/datasets/{dataset_id}/profile` | データセット全体から散らばるように取った約 100,000 行の標本の、列の統計量、ヒストグラム、相関（`n_rows` はデータセットの行数、`sample_rows` は標本の行数）。`?target=<列名>` を付けるとリークの疑いも返します。 | 読み取り |
 | `GET /projects/{project_id}/datasets/{dataset_id}/columns/{column}` | 1 列のプロファイル。 | 読み取り |
+| `PUT /uploads/{token}` | MCP のツール `create_upload_url` が返す 1 回限りのアップロード URL に、CSV をそのまま本文として送ります（[MCP](/ja/guide/mcp)を参照）。応答はデータセットのアップロードと同じです。API トークンは不要で、URL 自体が資格情報です。不明・使用済み・期限切れの URL や、MCP またはその書き込みスイッチがオフのときは 404、上限を超えるファイルは 413、CSV として読めないときは 422 `invalid_csv` を返します。 | URL を持つ人 |
 
 ### ジョブ
 
@@ -244,8 +246,8 @@ curl -X POST http://localhost:8080/api/v1/models/1/contributions \
 | `DELETE /models/{model_id}` | モデルを削除します。 | 書き込み |
 | `GET /models/{model_id}/export` | 再びインポートできる zip としてのモデル。 | 読み取り |
 | `POST /projects/{project_id}/models/import` | エクスポートした zip をインポートします（multipart の `file`、任意で `trust_foreign`）。 | 管理者 |
-| `GET /models/{model_id}/serving` | [Fione Serving](/ja/docs/serving) 用のバンドル（zip）。 | 読み取り |
-| `GET /models/{model_id}/serving/info` | バンドルを動かすコマンド、呼び出し例、zip に含まれるファイル。 | 読み取り |
+| `GET /models/{model_id}/serving` | [Fione Serving](/ja/docs/serving) のサービング用ファイル（zip）。 | 読み取り |
+| `GET /models/{model_id}/serving/info` | サービング用ファイルを動かすコマンド、呼び出し例、zip に含まれるファイル。 | 読み取り |
 | `GET /projects/{project_id}/exports/{job_id}` | 完了したエクスポートジョブの zip。 | 読み取り |
 
 ### 説明

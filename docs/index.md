@@ -28,9 +28,9 @@ A Fione install is one application with a few services around it.
 
 **Metadata in SQLite.** Users, projects, datasets, jobs, models and assistant conversations are rows in a SQLite database (`fione.db`) in the data directory, which is the `fione-data` volume in the Compose setup. The data directory also holds the secret key, job logs and temporary files.
 
-**Object storage.** Dataset files and trained models are stored as objects. Compose runs SeaweedFS with an S3 API for this, and the `fione` container creates the bucket at its first start; any S3-compatible service works, and a local directory can be used instead. Only the `fione` container reaches the storage.
+**Object storage.** Dataset files, trained models, model exports and uploaded Python modules are stored as objects. Compose runs SeaweedFS with an S3 API for this, and the `fione` container creates the bucket at its first start; any S3-compatible service works, and a local directory can be used instead. Only the `fione` container reaches the storage.
 
-**Fione Serving.** A separate, small image that serves one trained model over HTTP. You download a model as a serving bundle and run the image on it; it needs neither Fione nor the storage, and runs on a Compose network of its own. See [Fione Serving](/docs/serving).
+**Fione Serving.** A separate image that serves one trained model over HTTP. You download a model as a serving bundle and run the image on it; it needs neither Fione nor the storage, and runs on a Compose network of its own. See [Fione Serving](/docs/serving).
 
 **The language model (optional).** The assistant calls a language model server: an Ollama server (on the host, or in Compose with the `ollama` profile) or Claude through the Anthropic API. Nothing is bundled and Fione works without it. See [Assistant setup and MCP](/docs/assistant).
 

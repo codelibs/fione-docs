@@ -11,7 +11,7 @@ This page walks through the situations it is meant for. The setting-by-setting r
 
 ## Before you start
 
-1. **Switch it on.** MCP is off by default. Set `FIONE_MCP_ENABLED=true` to let a client read your projects, and also `FIONE_MCP_WRITE_ENABLED=true` to let it create projects, upload data, start jobs and predict (in `docker/.env` for Compose, then restart Fione). Everything below needs both.
+1. **Switch it on.** MCP is off by default. Set `FIONE_MCP_ENABLED=true` to let a client read your projects, and also `FIONE_MCP_WRITE_ENABLED=true` to let it create projects, upload data, start jobs and predict (in `docker/.env` for Compose, then restart Fione). The workflows below need both; [looking at projects you already have](#looking-at-projects-you-already-have) needs only the first.
 2. **Create an API token** on the **Account** page (see [Users and sharing](/guide/users-sharing#api-tokens)). The client acts as the token's owner, with that person's role and projects.
 3. **Give the client the URL and the token.** The endpoint is `/mcp` on Fione's own port. In Claude Code:
 
@@ -22,7 +22,7 @@ This page walks through the situations it is meant for. The setting-by-setting r
 
    Other clients that can send a header take the same URL and an `Authorization: Bearer <your token>` header; the reference has a JSON example. A client that can only start local programs, and cannot send a header to a remote URL, needs a bridge that adds it; check your client's documentation. That route has not been tried with Fione.
 
-Fione's own responses never contain example values from your data, so a client that is only reading never sees a cell. Values the client itself sends (the CSV it uploads, the rows it asks to predict) are its own.
+The read tools never return example values from your data, so a client that is only reading never sees a cell. Predictions are the exception: `predict` and `get_predictions` return the predicted labels and the class names. Values the client itself sends (the CSV it uploads, the rows it asks to predict) are its own.
 
 ## A CSV file on your computer (Claude Code)
 
@@ -36,7 +36,7 @@ Claude then works through these steps, each one a tool call you can follow in it
 
 1. `create_project` makes the project and returns its id.
 2. `create_upload_url` returns a one-time URL, and Claude sends the file with `curl -T customers.csv '<url>'`. The URL works for 15 minutes and for one successful upload; it needs no token. The answer to the upload describes the dataset (rows, columns, column kinds).
-3. `describe_dataset` returns column statistics, correlations and columns that look like leaks. `propose_training_config` turns that and the column to predict into a training configuration (nothing is saved yet).
+3. `describe_dataset` returns column statistics, correlations and, given the column to predict, columns that look like leaks. `propose_training_config` turns that and the column to predict into a training configuration (nothing is saved yet).
 4. `start_training` queues the job. `wait_for_job` is called again and again until `done` is `true`; the finished job's result has the `model_id`.
 5. `get_leaderboard` (and `get_feature_importance` or `get_model_diagnostics`) show how the models compare and which columns matter.
 
@@ -58,9 +58,9 @@ There are two ways, by how many rows you have.
 ## Watching, stopping and finding jobs
 
 - `wait_for_job` waits at most `timeout_secs` (10 by default, 15 at most) and returns the job's state with `done`. A long training takes many calls; that is expected.
-- `get_job` shows a job once without waiting, `list_jobs` the newest 50 jobs of the projects the token's user can read (jobs that belong to no project are not listed), and `get_training_events` what a training is doing.
+- `get_job` shows a job once without waiting, `list_jobs` the newest 50 jobs of the projects the token's user can read, optionally of one project or one status (jobs that belong to no project are not listed), and `get_training_events` what a training is doing.
 - `cancel_job` stops a queued or running job in a project the token's user can write to. It does not delete anything.
-- A job's message is not sent over MCP. The status and `get_training_events` tell what happened.
+- A job's message is not sent over MCP. The status and `get_training_events` (the kind, model family and exception type of each event, without its message text) tell what happened.
 
 ## Looking at projects you already have
 
@@ -78,7 +78,7 @@ With only `FIONE_MCP_ENABLED`, a client can list projects, datasets and models a
 
 | What | Limit |
 |---|---|
-| Tool calls at once | 2 (a third waits up to 15 seconds, then answers "busy") |
+| Requests at once | 2, counting every request to `/mcp` (a third waits up to 15 seconds, then answers "busy") |
 | `wait_for_job` | 15 seconds per call |
 | `upload_dataset` text | 512 KiB |
 | File sent to an upload URL | `FIONE_MAX_UPLOAD_BYTES` (1 GiB by default) |
@@ -86,12 +86,14 @@ With only `FIONE_MCP_ENABLED`, a client can list projects, datasets and models a
 | `predict` | 1000 rows, and a 32 KiB result |
 | Any tool result | 32 KiB |
 | `list_jobs` | The newest 50 |
+| Request body | 1 MiB |
 
 ## When something goes wrong
 
 | What you see | What to do |
 |---|---|
-| The client lists only read tools | `FIONE_MCP_WRITE_ENABLED` is off. Set it to `true` and restart Fione. |
+| 404 from `/mcp` | `FIONE_MCP_ENABLED` is off. Set it to `true` and restart Fione. |
+| The client lists no `create_project` or `start_training` | `FIONE_MCP_WRITE_ENABLED` is off. Set it to `true` and restart Fione. |
 | 401 from `/mcp` | The token is missing, wrong or revoked. Create one on the **Account** page; a session cookie does not work. |
 | "busy" | Two calls are already running (a waiting `wait_for_job` holds one). Ask again in a moment. |
 | The upload URL answers 404 | It is unknown, already used, expired, or MCP or its write switch is off. Ask for a new one. |

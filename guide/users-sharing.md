@@ -41,7 +41,7 @@ A new installation has no users. The first administrator is created on the setup
 
 People sign in with a username and a password:
 
-- A username is 1 to 64 characters: letters, digits, dot (`.`), underscore (`_`) and hyphen (`-`).
+- A username is 1 to 64 characters: ASCII letters, digits, dot (`.`), underscore (`_`) and hyphen (`-`).
 - A password has at least 8 characters.
 - There is no self-service password reset. The sign-in page says: "Forgot your password? Ask an administrator to reset it."
 - A sign-in lasts 7 days by default (`FIONE_SESSION_MAX_AGE_SECS`). After 5 failed attempts for the same username from the same address within 15 minutes, further attempts are refused for a while (`FIONE_LOGIN_MAX_FAILURES`, `FIONE_LOGIN_WINDOW_SECS`). See [Configuration](/docs/configuration) for both settings.
@@ -107,7 +107,7 @@ The answer names the user the token belongs to and its role.
 To stop a token from working, choose **Revoke** next to it and confirm. Scripts that use it fail at once, and this cannot be undone. Keep in mind that:
 
 - tokens do not expire, and Fione does not record when one was last used, so revoke the ones you no longer need;
-- setting a new password for a user does not revoke their tokens; revoke them as well if an account may be compromised;
+- setting a new password for a user does not revoke their tokens; if an account may be compromised, its owner revokes them on the **Account** page, or an administrator through the REST API (`GET /api/v1/tokens?user_id=<id>`, then `DELETE /api/v1/tokens/<token-id>`);
 - deleting a user deletes their tokens.
 
 See [Known limitations](/docs/known-limitations) for the security notes that apply to accounts, tokens and Python modules.

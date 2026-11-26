@@ -48,7 +48,7 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LOGIN_MAX_FAILURES_PER_IP` | `50` | 期間内に、ユーザー名に関係なくクライアントアドレスごとにパスワード確認が失敗できる回数。 | [リバースプロキシの背後で使う](#リバースプロキシの背後で使う)を参照。 |
 | `FIONE_TRUST_PROXY` | `false` | クライアントアドレスとホストを `X-Forwarded-For` / `X-Forwarded-Host` から取ります (最後の値、つまりプロキシが追加した値)。 | これらのヘッダーを付けるリバースプロキシの背後でのみ `true`。 |
 | `FIONE_SETUP_TOKEN` | 未設定 | 最初の管理者を作成するトークン (16 文字以上)。未設定のときは Fione が生成し、管理者ができるまで起動のたびにログへ出力します。 | 自分で決めたいとき (`docker/.env`)。 |
-| `FIONE_PUBLIC_URL` | 未設定 | ブラウザから見た Fione 自身のオリジン (`scheme://host[:port]`、パスなし)。例: `https://fione.example.com`。MCP エンドポイントは、ブラウザからのリクエスト (`Origin`) をこのオリジンと `localhost` からのものだけ受け付けます。 | ブラウザ上の MCP クライアントが別のアドレスで Fione に接続するとき。TLS プロキシの背後では `https` のオリジンを指定してください。Fione には分かりません。また、MCP クライアントが受け取る一度だけのアップロード URL (`create_upload_url`) のアドレスにもなります。未設定のときはリクエストの `Host` が使われ (`FIONE_TRUST_PROXY` の影響は受けません)、リバースプロキシが内部の名前に書き換えていることがよくあります。 |
+| `FIONE_PUBLIC_URL` | 未設定 | ブラウザから見た Fione 自身のオリジン (`scheme://host[:port]`、パスなし)。例: `https://fione.example.com`。MCP エンドポイントは、ブラウザからのリクエスト (`Origin`) をこのオリジンと `localhost`、`127.0.0.1`、`[::1]` からのものだけ受け付けます。 | ブラウザ上の MCP クライアントが別のアドレスで Fione に接続するとき。TLS プロキシの背後では `https` のオリジンを指定してください。Fione には分かりません。また、MCP クライアントが受け取る一度だけのアップロード URL (`create_upload_url`) のアドレスにもなります。未設定のときはリクエストの `Host` が使われ (`FIONE_TRUST_PROXY` の影響は受けません)、リバースプロキシが内部の名前に書き換えていることがよくあります。 |
 
 ### アシスタント (言語モデル) と MCP
 
@@ -62,8 +62,8 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LLM_MODEL` | `gemma4:12b-mlx` (`claude` では `claude-opus-5-5`) | リクエストごとに送るモデル名 (表示可能な ASCII 文字で 1〜200 文字)。MLX モデルは、Apple Silicon の Mac のホストに入れた Ollama でだけ動き、Fione はその API 経由で使います。それ以外 (Linux やコンテナ内の Ollama) では `gemma4:12b` のような MLX ではないタグを使ってください。 | 別のモデルを使うとき、MLX が動かないマシンのとき。 |
 | `FIONE_LLM_EXTRA_BODY` | 未設定 | `ollama` のみ (`claude` では拒否されます)。すべてのリクエストにマージする JSON オブジェクト。例: `{"reasoning_effort": "none"}`。キー `model`、`messages`、`tools`、`stream`、`stream_options`、`max_tokens` は指定できません。未設定のときは `{"reasoning_effort": "none"}` です。 | Ollama サーバーで思考をオンにしたり、サンプリングのオプションを指定したりするとき。 |
 | `FIONE_LLM_AUTO_PULL` | `false` | `ollama` のとき、サーバーにモデルがなければダウンロードし、進み具合を**システムの状態**ページに表示します。`false` ならサーバーのモデルは利用者に任され、モデルがないときはページにダウンロードのボタンが出ます。`claude` では無視されます。 | 確認なしでダウンロードさせたいとき。たとえば Fione だけが使う Ollama サーバーなど。 |
-| `FIONE_LLM_MAX_TOKENS` | `1024` (`claude` では `16000`) | 1 回の応答のトークン数の上限 (思考を含む)。64〜64000 で、`FIONE_LLM_CONTEXT_TOKENS` より 4954 以上小さくします。 | 長い答えが必要なとき、遅いモデルを抑えたいとき。 |
-| `FIONE_LLM_CONTEXT_TOKENS` | `16384` (`claude` では `200000`) | 1 回のリクエストのトークン予算。Fione が送るプロンプトの最大長で、応答を含みます。262144 まで。`FIONE_LLM_CONTEXT_TOKENS` から `FIONE_LLM_MAX_TOKENS` を引いた値は 4954 以上が必要です。アシスタントのツールと指示で約 4,890 トークン使うため、それより小さいと質問を入れる余地がありません。モデルのコンテキストウィンドウを超えない値にしてください。Ollama では、Fione はサーバーがモデルを読み込んだときのコンテキストにも合わせます。Ollama の既定の 4096 でもツールには小さすぎます。Ollama サーバーに `OLLAMA_CONTEXT_LENGTH=16384` を設定してください (Compose の `ollama` プロファイルは設定済み。ホストの Ollama では自分で設定します)。 | モデルのコンテキストウィンドウに合わせるとき。 |
+| `FIONE_LLM_MAX_TOKENS` | `1024` (`claude` では `16000`) | 1 回の応答のトークン数の上限 (思考を含む)。64〜64000 で、`FIONE_LLM_CONTEXT_TOKENS` より 5240 以上小さくします。 | 長い答えが必要なとき、遅いモデルを抑えたいとき。 |
+| `FIONE_LLM_CONTEXT_TOKENS` | `16384` (`claude` では `200000`) | 1 回のリクエストのトークン予算。Fione が送るプロンプトの最大長で、応答を含みます。262144 まで。`FIONE_LLM_CONTEXT_TOKENS` から `FIONE_LLM_MAX_TOKENS` を引いた値は 5240 以上が必要です。アシスタントのツールと指示で約 5,200 トークン使うため、それより小さいと質問を入れる余地がありません。モデルのコンテキストウィンドウを超えない値にしてください。Ollama では、Fione はサーバーがモデルを読み込んだときのコンテキストにも合わせます。Ollama の既定の 4096 でもツールには小さすぎます。Ollama サーバーに `OLLAMA_CONTEXT_LENGTH=16384` を設定してください (Compose の `ollama` プロファイルは設定済み。ホストの Ollama では自分で設定します)。 | モデルのコンテキストウィンドウに合わせるとき。 |
 | `FIONE_LLM_MAX_TOOL_ROUNDS` | `6` | 1 つの答えがツールを呼べる回数。超えると「手順が多すぎる」として止まります。1〜20。 | 調べる回数が多い質問のとき。 |
 | `FIONE_LLM_TURN_TIMEOUT_SECS` | `180` | 1 つの答えにかけられる時間 (ツールの全ラウンドを含む)。超えるとタイムアウトで終わります。10〜1800。 | モデルやハードウェアが遅いとき。 |
 | `FIONE_LLM_MAX_CONCURRENT_TURNS` | `2` | 全ユーザー合計で同時に書く答えの数。超えた分は待ち行列に入ります。1〜16。 | 並列リクエストを処理できるサーバーのとき。 |
@@ -85,8 +85,8 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_PORT` | いいえ | Web UI のホスト側ポート (既定は `8080`、127.0.0.1 上)。 |
 | `FIONE_PUBLIC_URL` | いいえ | ブラウザから見た Fione のオリジン。Fione に渡されます (上記参照)。 |
 | `FIONE_SERVING_PORT` | いいえ | オプションの `fione-serving` サービスのホスト側ポート (既定は `8081`、127.0.0.1 上)。 |
-| `FIONE_MODEL_DIR` | いいえ | `fione-serving` サービスがマウントするモデルのディレクトリ (既定は `./model`)。 |
-| `FIONE_LLM_BASE_URL` | いいえ | Fione に渡されます (上記参照)。空ならプロバイダーの既定値で、`ollama` ではホスト上の Ollama、`http://host.docker.internal:11434/v1` です。`ollama` プロファイルでは `http://ollama:11434/v1`。 |
+| `FIONE_MODEL_DIR` | いいえ | `fione-serving` サービスがマウントするモデルのディレクトリ (既定はリポジトリの `docker/model`)。 |
+| `FIONE_LLM_BASE_URL` | いいえ | Fione に渡されます (上記参照)。空ならプロバイダーの既定値で、`ollama` ではホスト上の Ollama、`http://host.docker.internal:11434/v1` です。`ollama` プロファイルを使うときは `http://ollama:11434/v1` に設定します。 |
 | `FIONE_LLM_PROVIDER` | いいえ | Fione に渡されます (既定は `ollama`。`claude` には下のキーが必要)。 |
 | `FIONE_LLM_MODEL` | いいえ | Fione に渡されます。空ならプロバイダーの既定値 (`ollama` では `gemma4:12b-mlx`、`claude` では `claude-opus-5-5`)。`ollama` プロファイルでは `gemma4:12b` を指定します。 |
 | `FIONE_LLM_API_KEY` | `claude` のとき | Fione に渡されます (上記参照)。 |
@@ -157,7 +157,7 @@ server {
         proxy_pass http://127.0.0.1:8080;
         proxy_set_header Host $http_host;  # 必須: フォームは Origin と Host の一致を確認する
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $http_host;  # FIONE_TRUST_PROXY のとき、クライアントが送った値を置き換えます
         proxy_request_buffering off;       # 大きなアップロードをストリーミングする
         proxy_read_timeout 300s;
     }
@@ -188,7 +188,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env logs fione | grep "
 
 ### ストレージ
 
-SeaweedFS がデータセットとモデルを保存します (ボリューム `seaweed-data`。Docker は Compose プロジェクト名 `fione` にちなんで、ボリュームを `fione_seaweed-data` と `fione_fione-data` と名付けます)。S3 のポートはホストに公開されず、`fione` だけが Compose ネットワーク `backend` 経由で接続します。そのほかのポート (マスター、ファイラー、ボリューム) はそのネットワーク上では認証が不要ですが、そのネットワークに参加するのは `fione` と SeaweedFS だけです。オプションの `fione-serving` サービスは専用のネットワーク (`serving`) で動き、これらに接続できません。
+SeaweedFS がデータセット、学習済みモデル、モデルのエクスポート、アップロードした Python モジュールを保存します (ボリューム `seaweed-data`。Docker は Compose プロジェクト名 `fione` にちなんで、ボリュームを `fione_seaweed-data` と `fione_fione-data` と名付けます)。S3 のポートはホストに公開されず、`fione` だけが Compose ネットワーク `backend` 経由で接続します。そのほかのポート (マスター、ファイラー、ボリューム) はそのネットワーク上では認証が不要ですが、そのネットワークに参加するのは `fione` と SeaweedFS だけです。オプションの `fione-serving` サービスは専用のネットワーク (`serving`) で動き、これらに接続できません。
 
 ### 言語モデルのサーバー
 

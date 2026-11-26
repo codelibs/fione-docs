@@ -12,7 +12,7 @@ description: Fione の停止、Docker ボリュームと秘密鍵のバックア
 | 場所 | 内容 |
 |---|---|
 | Docker ボリューム `fione_fione-data`(`fione` コンテナの `/data`) | SQLite データベース(ユーザー、プロジェクト、ジョブなどのメタデータ)、**秘密鍵**(`secret.key`)、管理者ができるまでのセットアップトークン、ジョブのログ、一時ファイル。 |
-| Docker ボリューム `fione_seaweed-data` | データセットと学習済みモデル。SeaweedFS(S3 互換)が保存します。 |
+| Docker ボリューム `fione_seaweed-data` | データセット、学習済みモデル、モデルのエクスポート、アップロードした Python モジュール。SeaweedFS(S3 互換)が保存します。 |
 | `docker/.env` | Fione と SeaweedFS が共有する S3 の認証情報と、追加した任意の設定。ボリュームには入っていません。 |
 | Docker ボリューム `fione_ollama-data` | 言語モデルのファイル。Compose のプロファイル `ollama` を使うときだけあります。 |
 
@@ -70,7 +70,7 @@ Fione 20 の新しい版へアップグレードする手順です。
 
 1. 上記の手順でバックアップします。
 2. 現在のサービング用イメージに別の名前を付けて残します。サービング用イメージを再ビルドすると `ghcr.io/codelibs/fione-serving:dev` が置き換わりますが、古いイメージがまだ必要になることがあります(後述)。
-3. 新しい版を取得して、Fione とサービング用イメージを再ビルドします。
+3. 新しい版を取得して、Fione とサービング用イメージを再ビルドします。`docker/compose.yaml` を変更している場合 (`environment` の項など) は、`git pull` の前にその変更をコミットするか退避し、あとでもう一度適用します。サービング用イメージをビルドしたことがなければ、`docker tag` の行は飛ばします。
 
 ```sh
 docker tag ghcr.io/codelibs/fione-serving:dev fione-serving:before-upgrade
@@ -79,7 +79,7 @@ docker compose -f docker/compose.yaml --env-file docker/.env up -d --build --wai
 docker compose -f docker/compose.yaml --env-file docker/.env --profile serving build fione-serving
 ```
 
-データはそのまま残ります。アップグレード後は、管理者がアカウントのメニューの**システムの状態**ページで、**バージョン**と**イメージタグ**を確認できます。
+データはそのまま残ります。データベースは、新しい版の最初の起動時に更新されます。元に戻すときは、アップグレード前のバックアップを復元してください。更新されたデータで古い版を起動しないでください。アップグレード後は、管理者がアカウントのメニューの**システムの状態**ページで、**バージョン**と**イメージタグ**を確認できます。
 
 **モデルとイメージのタグ**: 学習済みのモデルは、学習したイメージのタグを記録していて、Fione Serving は同じタグのモデルしか読み込みません。また、古い版で学習したモデルは、Fione のコードを pickle 形式で保存したものなので、新しい版で読み込める保証がありません。アップグレード後は、使い続けるモデルを再学習してください。それまでは、残しておいたイメージでそのモデルのサービング用ファイルを動かします。`docker run` コマンドの `ghcr.io/codelibs/fione-serving:dev` を `fione-serving:before-upgrade` に置き換えてください。
 

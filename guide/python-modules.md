@@ -1,23 +1,23 @@
 ---
 title: Python modules for data operations
-description: Run Fione's built-in Python modules (sort, join, split, k-means, low-rank factorization) on a dataset, or upload your own as an administrator.
+description: Run Fione's built-in Python modules (joins, calculated columns, lags, rolling statistics, k-means) on a dataset, or upload your own as an administrator.
 ---
 
 # Python modules for data operations
 
-A **Python module** is a data operation that runs as a job on the server: it takes a dataset and a few parameters and produces a new dataset. Fione comes with built-in modules for common table operations, k-means clustering and low-rank factorization, and administrators can upload their own.
+A **Python module** is a data operation that runs as a job on the server: it takes a dataset and a few parameters and produces a new dataset. Fione comes with built-in modules for common table operations (joins, reshaping, calculated columns, values from earlier times, rolling statistics, ranks), k-means clustering and low-rank factorization, and administrators can upload their own.
 
 A module never changes its input. Its result is saved as a new dataset in the same project, so you can inspect it, train on it or feed it to another module.
 
 ## Where to find them
 
-Open the account menu and choose **Python modules**. Administrators always see this entry; other users see it when the view is set to **Detailed** (the **View** switch in the same menu). The page lists every module with its id, name, kind, parameters, source (**Built in** or **Uploaded**) and, for uploaded ones, when it was uploaded.
+Open the account menu and choose **Python modules**. Administrators always see this entry; other users see it when the view is set to **Detailed** (the **View** switch in the same menu). The page lists every module with its id, name, kind, parameters, source (**Built in** or **Uploaded**) and, for uploaded ones, its size and when it was uploaded.
 
 ![The Python modules page](./img/modules.png)
 
 Everyone who can sign in can see the list. Running a module needs write access to the project, and uploading or deleting one needs the administrator role.
 
-Modules run as jobs through the [Python client](/guide/sdk) or the [REST API](/docs/rest-api); the page itself is the catalogue. The assistant can also propose a join for you to confirm (see [The assistant](/guide/assistant)).
+Modules run as jobs through the [Python client](/guide/sdk), the [REST API](/docs/rest-api) or an [MCP client](/guide/mcp); the page itself is the catalogue. The assistant can also propose a join for you to confirm (see [The assistant](/guide/assistant)).
 
 ## Kinds of modules
 
@@ -36,23 +36,63 @@ The result of a `predict` module is saved as a dataset of type `predict`; the re
 | Id | Name | What it does |
 |---|---|---|
 | `cbind` | Combine columns | Puts the columns of a second dataset (`other_dataset_id`) beside the columns of the first. Both need the same number of rows. |
-| `rbind` | Combine rows | Stacks the rows of a second dataset (`other_dataset_id`) under the first. Both need the same columns. |
-| `concat` | Concatenate datasets | Combines two datasets side by side (`axis` 1, the default) or one under the other (`axis` 0). |
-| `join` | Join datasets by a key column | Adds the columns of the other dataset to the rows with the same `key`. Every row of the first dataset stays. See below. |
+| `rbind` | Combine rows | Stacks the rows of a second dataset (`other_dataset_id`) under the first. Both need the same set of columns, in any order. |
+| `concat` | Concatenate datasets | Combines two datasets side by side (`axis` 1, the default) or one under the other (`axis` 0; a column only one of them has is left empty in the other's rows). |
+| `join` | Join datasets by key columns | Adds the columns of the other dataset to the rows with the same key. Every row of the first dataset stays. See [Joining](#joining). |
 | `cslice` | Slice columns | Keeps the listed `columns`. |
 | `rslice` | Slice rows | Keeps the rows that match `row_conditions`. |
 | `replace` | Replace values | Sets `column` to `value` in the rows that match `row_conditions` (all rows if empty). |
-| `sort` | Sort | Sorts by `column`, ascending by default. |
-| `fillna` | Fill missing values | Fills gaps forward or backward (`method`), along `axis`, for at most `maxlen` cells in a row. |
-| `floor` | Apply floor | Returns the numeric `columns` rounded down. |
+| `sort` | Sort | Sorts by `column` (`ascending`, `true` by default). Empty values go last. |
+| `fillna` | Fill missing values | Fills gaps from the previous value (`method` `forward`, the default) or the next one (`backward`), down the columns (`axis` 0) or across a row (`axis` 1), filling at most `maxlen` missing cells in a row (default 1). |
+| `floor` | Apply floor | Returns only the numeric `columns`, rounded down. |
 | `cor` | Compute correlation | The correlation matrix of the numeric `columns` (`method` `pearson` or `spearman`). |
-| `pivot` | Pivot table | One row per value of `index`, one column per value of `column`, filled from `value`. |
-| `split` | Split into train, valid and test | Returns one `part` (`train`, `valid` or `test`) of a random split by `train_ratio`, `valid_ratio`, `test_ratio` (70, 15 and 15 by default) and `seed`. |
-| `tokenize` | Tokenize text | Splits a text column (`target_column`) into one token per row, with an empty row after each document. |
+| `pivot` | Pivot table | One row per value of `index`, one column per value of `column`, filled from `value`. See [Reshaping](#reshaping). |
+| `unpivot` | Unpivot columns into rows | Turns columns into rows: one row per input row and column. See [Reshaping](#reshaping). |
+| `calc` | Add a calculated column | Adds the column `name`, computed by `expression` from other columns. See [Calculated columns](#calculated-columns). |
+| `lag` | Add values from earlier times | Adds the values of `columns` at earlier times of `time`. See [Time and order](#time-and-order). |
+| `rolling` | Add statistics of nearby values | Adds statistics of `columns` over the rows before, around or after each row in `order`. See [Time and order](#time-and-order). |
+| `rank` | Add the rank within a group | Adds the rank of `column` within each group of `by`. See [Time and order](#time-and-order). |
+| `split` | Split into train, valid and test | Returns one `part` (`train`, `valid` or `test`) of a random split by `train_ratio`, `valid_ratio`, `test_ratio` (relative weights, 70, 15 and 15 by default) and `seed`. Rows keep their order. |
+| `tokenize` | Tokenize text | Splits a text column (`target_column`) into one token per row, with an empty row after each document. `mode` is `word` (runs of letters, digits and `_`; the default), `whitespace` or `delimiter` (with `delimiter`). |
 
-`row_conditions` is a text such as `age >= 30 & country == JP`: terms of the form `column operator value` (operators `==`, `!=`, `<`, `<=`, `>`, `>=`, with a space on each side), joined by `&` (and) and `|` (or); `&` binds tighter. An empty text matches every row.
+`row_conditions` is a text such as `age >= 30 & country == JP`: terms of the form `column operator value` (operators `==`, `!=`, `<`, `<=`, `>`, `>=`, with a space on each side) or `column is empty` / `column is not empty`, joined by `&` (and) and `|` (or); `&` binds tighter. Parentheses are not supported, and a value cannot contain `&` or `|`. An empty cell never matches a comparison, not even `!=`. An empty text matches every row.
 
-**Joining.** `join` matches `key` in the first dataset with `other_key` in the other one (the same name if `other_key` is empty). Each key may appear only once in the other dataset. If it appears more than once, set `summarize` to `true`: the other dataset is then reduced to one row per key, with the number of rows (`rows`) and, for each numeric column, its mean, minimum, maximum and sum, and for other columns the number of different values. With `columns`, only those columns of the other dataset are added or summarized.
+The modules that compute with columns (`calc`, `lag`, `rolling`, `rank`, `floor`, `cor` and the clustering modules below) need integer or float columns (booleans count as 1 and 0 in `calc`); the job fails and names a text or date column. Column names and types are checked when the job runs.
+
+#### Joining
+
+`join` matches the key in the first dataset with the key in the other one. Name one key column in `key`, or several that identify a row together in `keys`; in the other dataset, `other_key` or `other_keys` (the same names if both are empty). A row whose key is empty matches nothing, and a number key matches the same text (`7` matches `"7"`).
+
+Each key may appear only once in the other dataset. If it appears more than once, set `summarize` to `true`: the other dataset is then reduced to one row per key, with the number of rows (`rows`), for each numeric column the statistics in `stats` (from `mean`, `min`, `max`, `sum`, `std` and `last`, the last value in row order; `mean,min,max,sum` by default), and for other columns the number of different values. With `columns`, only those columns of the other dataset are added or summarized. The job reports how many rows found no match.
+
+#### Reshaping
+
+`pivot` takes `index`, `column` and `value`. When a cell gets more than one row, `agg` decides what it holds: `first` (the default; the job reports how many cells had more), `sum`, `mean`, `min`, `max` or `count`. Rows with an empty `index` or `column` are left out.
+
+`unpivot` keeps the `keep` columns on every row and turns the other columns (or only those in `columns`) into two columns: `name` (default `variable`) with the column name and `value` (default `value`) with its value.
+
+#### Calculated columns
+
+`calc` adds the float column `name` (which must not exist yet) from `expression`, for example `price * quantity` or `where(age >= 65, 1, 0)`:
+
+- Column names are written as they are; a name with spaces or symbols, or one that is not a plain word, is written `col("unit price")`.
+- Arithmetic `+ - * / **`; comparisons `== != < <= > >=` and logic `&`, `|`, `~` give 1 or 0. Put each comparison in parentheses before joining it with `&` or `|`.
+- Functions: `abs`, `sqrt`, `log`, `log1p`, `exp`, `floor`, `sin`, `cos`, `radians`, `min2(a, b)`, `max2(a, b)`, `mod2(a, b)`, `atan2(y, x)`, `clip(x, lo, hi)`, `isnull(x)`, `where(cond, x, y)` and the constant `nan`.
+- Row functions `rowsum`, `rowmean` and `rowcount` take values and quoted name patterns, such as `rowsum("score_*")`, and skip empty values.
+
+A result that comes out infinite (division by zero, `log(0)`) is left empty, and the job reports how many rows that happened in.
+
+#### Time and order
+
+`lag` adds `<column>_lag<k>`: the value of each of `columns` `k` steps of `time` earlier, for each `k` in `lags` (comma-separated, `1` by default), within each group of `by`. `time` holds whole numbers, numbers `step` apart, or dates (one step is a day, so weekly data uses `step` 7). Rows of a group with the same time are first reduced to their `mean` or `sum` (`how`). The value is empty when no row has that earlier time, and the job reports a lag column that is empty on nearly every row.
+
+`rolling` adds `<column>_<side><window>_<stat>` (or `<column>_<side>_span<span>_<stat>`) for each of `columns`, ordered by `order` (numbers or dates) within each group of `by`:
+
+- `window` counts rows, or `span` counts the distance in `order` (days for dates); give exactly one of them.
+- `side` is `before` (the earlier rows, not the row itself; the default), `after` (the later rows) or `around` (an odd `window` centred on the row, which is included). `after` and `around` read later rows, so they do not suit forecasting.
+- `stats` is a comma-separated list from `mean`, `std`, `min`, `max`, `sum` and `count` (`mean` by default).
+
+`rank` adds `<column>_rank`, a percentile from 1/n to 1 (`how` `percent`, the default), or `<column>_dense_rank`, 1, 2, 3 with ties sharing a rank (`how` `dense`), within each group of `by`. With `among`, each group of `among` is first reduced to its mean and ranked as one.
 
 ### Clustering and low-rank factorization
 
@@ -65,7 +105,7 @@ These come as pairs: a `train` module learns from a dataset, and a `predict` mod
 | `lowrank_train` | Low-rank projection (train) | `columns`, `method` (`svd` or `nmf`), `n_components` (default 2), `seed`, `output_columns` |
 | `lowrank_predict` | Low-rank projection (project) | `module_model_id` (a state from `lowrank_train`), `output_columns` |
 
-K-means adds a `cluster` column; the low-rank modules add `component_1`, `component_2` and so on. The result holds only those columns, plus the input columns named in `output_columns`. Missing values are replaced by the column mean seen in training. Every chosen column must be an integer or float column (not text, a date or a boolean), or the job fails and names the offending columns. Leave text columns out by listing the numeric ones in `columns`; the same goes for `floor` and `cor`.
+K-means adds a `cluster` column (numbered from 0); the low-rank modules add `component_1`, `component_2` and so on. The result holds only those columns, plus the input columns named in `output_columns`. Missing values are replaced by the column mean seen in training. Every chosen column must be an integer or float column (not text, a date or a boolean), or the job fails and names the offending columns, so list the numeric ones in `columns`. `nmf` needs values of 0 or more. A `predict` module accepts only a state of its own `train` module from the same project.
 
 Each module's full parameter list, with types, defaults and limits, is what `GET /api/v1/modules` returns.
 
@@ -104,7 +144,7 @@ clusters = fione.run_module(
 ).wait()
 ```
 
-Parameters are checked before the job is queued: an unknown parameter name, a missing required one or a value of the wrong type is refused right away. Jobs run in the short-job queue (`FIONE_MAX_CONCURRENT_SHORT_JOBS` at once) and read the whole dataset into memory.
+Parameters are checked before the job is queued: an unknown parameter name, a missing required one, a value of the wrong type or out of range, or a dataset or module model of another project is refused right away. Column names and types are checked when the job runs. Some modules add notices to the finished job, such as how many rows found no match in a join. Jobs run in the short-job queue (`FIONE_MAX_CONCURRENT_SHORT_JOBS` at once) and read the whole dataset into memory.
 
 ## Upload your own module (administrators)
 
