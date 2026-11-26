@@ -12,9 +12,9 @@ const SITE = 'https://fione.codelibs.org'
 const SITE_NAME = 'Fione'
 const GITHUB_REPO = 'https://github.com/codelibs/fione'
 const SITE_DESC_EN =
-  'Fione is an open-source AutoML server: upload a CSV in the browser, get a trained model, make predictions and serve the model as an API. Self-hosted with one docker compose up.'
+  'Fione is an open-source AutoML server: train a model from a CSV and use its predictions from AI tools such as Claude and Codex over MCP, from your own service through the API, or in the browser. Self-hosted with one docker compose up.'
 const SITE_DESC_JA =
-  'Fione はオープンソースの AutoML サーバーです。ブラウザーで CSV をアップロードしてモデルを学習し、予測を行い、予測 API として提供できます。docker compose up だけで動かせます。'
+  'Fione はオープンソースの AutoML サーバーです。CSV からモデルを学習し、その予測を MCP で Claude や Codex などの AI ツールから、API で自分のサービスから、ブラウザーから使えます。docker compose up だけで動かせます。'
 const OG_IMAGE = `${SITE}/og-image.png`
 
 // ---------------------------------------------------------------------------
@@ -124,6 +124,7 @@ function guideSidebar(lang: 'en' | 'ja'): DefaultTheme.SidebarItem[] {
         { text: t('Overview', '概要'), link: `${p}/` },
         { text: t('Quick start', 'クイックスタート'), link: `${p}/installation` },
         { text: t('EasyML wizard', 'EasyML ウィザード'), link: `${p}/easyml` },
+        { text: t('Working with AI tools (MCP)', 'AI ツールと使う (MCP)'), link: `${p}/mcp` },
       ],
     },
     {
@@ -136,8 +137,12 @@ function guideSidebar(lang: 'en' | 'ja'): DefaultTheme.SidebarItem[] {
         { text: t('Python modules', 'Python モジュール'), link: `${p}/python-modules` },
         { text: t('Python client (fione-sdk)', 'Python クライアント (fione-sdk)'), link: `${p}/sdk` },
         { text: t('The assistant', 'アシスタント'), link: `${p}/assistant` },
-        { text: t('Working with Claude (MCP)', 'Claude と使う (MCP)'), link: `${p}/mcp` },
       ],
+    },
+    {
+      text: t('Community', 'コミュニティ'),
+      collapsed: false,
+      items: [{ text: t('Help and support', 'ヘルプとサポート'), link: `${p}/support` }],
     },
   ]
 }
@@ -419,7 +424,7 @@ export default defineConfig({
           { text: 'Guide', link: '/guide/' },
           { text: 'Docs', link: '/docs/' },
           { text: 'Forum', link: 'https://discuss.codelibs.org/c/fioneen/' },
-          { text: 'Commercial Support', link: 'https://codelibs.co/' },
+          { text: 'Commercial Support', link: 'https://codelibs.co/product/fione.html' },
         ],
         sidebar: {
           '/guide/': guideSidebar('en'),
@@ -438,7 +443,7 @@ export default defineConfig({
           { text: 'ガイド', link: '/ja/guide/' },
           { text: 'ドキュメント', link: '/ja/docs/' },
           { text: 'フォーラム', link: 'https://discuss.codelibs.org/c/fioneja/' },
-          { text: '商用サポート', link: 'https://codelibs.co/ja/' },
+          { text: '商用サポート', link: 'https://codelibs.co/ja/product/fione.html' },
         ],
         sidebar: {
           '/ja/guide/': guideSidebar('ja'),
@@ -558,7 +563,7 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/codelibs/fione' },
     ],
     footer: {
-      message: 'Sponsored by <a href="https://codelibs.co">Codelibs, inc</a>',
+      message: 'Released under the Apache License 2.0. Developed by <a href="https://codelibs.co">CodeLibs, Inc.</a>',
     },
   } as FioneThemeConfig,
 })

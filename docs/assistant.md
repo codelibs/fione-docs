@@ -92,7 +92,7 @@ A dataset whose columns do not fit in a tool result is described by the names of
 
 ## MCP
 
-Fione can serve the same read-only tools to MCP clients (an AI assistant or an editor that speaks MCP), and, with a second switch, tools that create projects, upload datasets, start jobs and predict (see [Starting jobs from an MCP client](#starting-jobs-from-an-mcp-client)). For the situations this is meant for, see [Run the AutoML loop from Claude with MCP](/guide/mcp). It is **off by default**; set `FIONE_MCP_ENABLED=true` (in `docker/.env` for Compose). The endpoint is `/mcp` on Fione's own port, for example `http://127.0.0.1:8080/mcp`. It speaks Streamable HTTP (JSON-RPC over POST, protocol versions 2025-03-26, 2025-06-18 and 2025-11-25) and keeps no session: it answers only POST, with JSON (no event stream and no batches), and a request body is at most 1 MiB. With MCP off, `/mcp` answers 404.
+Fione can serve the same read-only tools to MCP clients (an AI assistant or an editor that speaks MCP), and, with a second switch, tools that create projects, upload datasets, start jobs and predict (see [Starting jobs from an MCP client](#starting-jobs-from-an-mcp-client)). For the situations this is meant for, see [Run the AutoML loop from an AI tool with MCP](/guide/mcp). It is **off by default**; set `FIONE_MCP_ENABLED=true` (in `docker/.env` for Compose). The endpoint is `/mcp` on Fione's own port, for example `http://127.0.0.1:8080/mcp`. It speaks Streamable HTTP (JSON-RPC over POST, protocol versions 2025-03-26, 2025-06-18 and 2025-11-25) and keeps no session: it answers only POST, with JSON (no event stream and no batches), and a request body is at most 1 MiB. With MCP off, `/mcp` answers 404.
 
 1. Create an API token on the **Account** page.
 2. Give the client the URL and the header `Authorization: Bearer <your-token>`. Many clients take a configuration like this:
@@ -108,11 +108,15 @@ The client acts as the token's owner and sees the projects that person can read.
 - A request from a browser (one with an `Origin` header) is accepted only from `localhost`, `127.0.0.1` or `[::1]` (any port) or from the origin in `FIONE_PUBLIC_URL`; set it when a browser-based client reaches Fione at another address.
 - At most two MCP requests run at once (every request counts, `initialize` and the tool list included); another waits up to 15 seconds and is then answered "busy".
 
-Claude Code takes the same URL and header:
+Claude Code and Codex take the same URL and token:
 
 ```sh
 claude mcp add --transport http fione http://127.0.0.1:8080/mcp \
   --header "Authorization: Bearer <your-token>"
+
+# Codex reads the token from an environment variable
+export FIONE_TOKEN=<your-token>
+codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE_TOKEN
 ```
 
 ### Starting jobs from an MCP client

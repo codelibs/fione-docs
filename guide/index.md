@@ -1,22 +1,25 @@
 ---
 title: "Fione overview: an open-source AutoML server"
-description: Fione is an open-source AutoML server. Upload a CSV, get a trained model, make predictions and serve the model as an API, all from the browser.
+description: "Fione overview: train a model from a CSV and use its predictions from AI tools such as Claude and Codex, your own service through the API, or the browser."
 ---
 
 # Overview
 
-Fione is an open-source AutoML server. You upload a CSV file in the browser, Fione trains a model on it, and you use the model to make predictions or to serve it as a prediction API. It runs with one `docker compose up`.
+Fione is an open-source AutoML server that makes predictions your AI can use. You give Fione a CSV file, Fione trains a model on it, and you use the model's predictions where you work: from AI tools such as Claude and Codex over MCP, from your own service through the REST API or Fione Serving, or in the browser. Fione runs on your own server with one `docker compose up`, and training and prediction happen there.
 
 You do not need machine-learning experience to get a first model. The **EasyML wizard** asks what you want to predict and how long Fione may work, then reports the result as a 1 to 5 star rating with a plain-language explanation. When you want more control, the detailed view opens every statistic, training setting and diagnostic.
 
 ## Who Fione is for
 
 - **People new to machine learning** who have a table of data (a CSV with a header row) and want a model and its predictions without writing code.
+- **People who work with AI tools** such as Claude or Codex and want them to train and use a prediction model on their own server, rather than guess from the data in the conversation.
+- **Developers** who want to add a prediction (who will cancel, which machine will fail, how much a customer will spend) to their own service through an API they host themselves.
 - **Data scientists and analysts** who want to train models quickly, read the cross-validation diagnostics and the model explanations, and script everything from Python when they prefer.
 - **Teams** who want one shared place for datasets and models, with administrators, editors and viewers, and a prediction API they host themselves.
 
 ## Features at a glance
 
+- **AI tools over MCP.** Claude Code, Claude Desktop, Codex and other MCP clients can upload a CSV, train, wait for the job, read the leaderboard and predict through Fione's MCP endpoint. See [Run the AutoML loop from an AI tool with MCP](/guide/mcp).
 - **EasyML wizard.** Upload, data analysis (the column to predict, the input columns, the prediction type, the maximum run time), run, prediction summary, predictions as a CSV. See [EasyML wizard](/guide/easyml).
 - **AutoML screens.** Column statistics and charts, correlations, leak warnings, every training setting, the job list, leaderboards, variable importance, score history, CV metrics, and model export and import. See [AutoML screens](/guide/automl).
 - **Model explanations.** Diagnostics from the cross-validation predictions, importance and partial dependence curves, the contributions behind each prediction, and warnings for columns that predict the answer suspiciously well. See [Explanations and leak warnings](/guide/explanations).
@@ -26,7 +29,6 @@ You do not need machine-learning experience to get a first model. The **EasyML w
 - **Python modules.** Data operations such as built-in frame operations, k-means and low-rank factorization; administrators can upload their own. See [Python modules](/guide/python-modules).
 - **Python client.** `fione-sdk` drives Fione from your own scripts and notebooks. See [Python client (fione-sdk)](/guide/sdk).
 - **Assistant.** Answers questions about a project's datasets and models and suggests a training run that a person confirms. See [Assistant](/guide/assistant).
-- **Claude and other MCP clients.** Claude Code or Claude Desktop can upload a CSV, train, wait for the job, read the leaderboard and predict through Fione's MCP endpoint. See [Run the AutoML loop from Claude with MCP](/guide/mcp).
 - **Storage.** Datasets and models live on SeaweedFS or any S3-compatible service; metadata is kept in SQLite.
 - English and Japanese, light and dark themes, usable on phones.
 
@@ -40,9 +42,9 @@ A Fione installation has a few moving parts, all started by Docker Compose:
 - **Fione Serving** is a second image, built on request. It serves one downloaded model as a prediction API on a port of your choice, separate from the Fione application.
 
 ```text
-Browser / scripts ──► fione (web app, REST API, job runner) ──► SeaweedFS (S3): datasets, models
-                              │                                  data volume: SQLite, secret key
-                              └──► language model (optional): Ollama or Claude
+Browser / scripts / MCP ──► fione (web app, REST API, job runner) ──► SeaweedFS (S3): datasets, models
+                                    │                                  data volume: SQLite, secret key
+                                    └──► language model (optional): Ollama or Claude
 
 serving bundle (zip) ──► fione-serving ──► POST /invocations
 ```
@@ -50,7 +52,8 @@ serving bundle (zip) ──► fione-serving ──► POST /invocations
 ## Where to go next
 
 1. [Installation](/guide/installation): start Fione, create the administrator and get a sample CSV.
-2. [EasyML wizard](/guide/easyml): train a model, make predictions and serve the model.
+2. [EasyML wizard](/guide/easyml): train a model, make predictions and serve the model. Or let an AI tool do it: [Run the AutoML loop from an AI tool with MCP](/guide/mcp).
 3. [AutoML screens](/guide/automl) and [Explanations and leak warnings](/guide/explanations): the detailed view.
-4. [Users and sharing](/guide/users-sharing), [Python modules](/guide/python-modules), [Python client (fione-sdk)](/guide/sdk), [Assistant](/guide/assistant) and [Claude with MCP](/guide/mcp).
+4. [Users and sharing](/guide/users-sharing), [Python modules](/guide/python-modules), [Python client (fione-sdk)](/guide/sdk), [Assistant](/guide/assistant) and [AI tools with MCP](/guide/mcp).
 5. For operators: [Configuration](/docs/configuration), [Operations](/docs/operations), [Fione Serving](/docs/serving) and [Known limitations](/docs/known-limitations).
+6. Questions and bug reports: [Help and support](/guide/support).

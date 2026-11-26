@@ -1,11 +1,11 @@
 ---
-title: "Run the AutoML loop from Claude with MCP"
-description: "Connect Claude Code or Claude Desktop to Fione over MCP: upload a CSV, train, wait, read the leaderboard and predict, with the limits and safeguards."
+title: "Run the AutoML loop from an AI tool with MCP"
+description: "Connect Claude Code, Codex or another MCP client to Fione: upload a CSV, train, wait, read the leaderboard and predict, with the limits and safeguards."
 ---
 
-# Run the AutoML loop from Claude with MCP
+# Run the AutoML loop from an AI tool with MCP
 
-Fione's MCP endpoint lets an AI client such as Claude Code or Claude Desktop do the work you would do in the browser: create a project, upload a CSV, look at the data, decide how to train, start the training, wait for it, read the results and predict. Fione trains and predicts on its own server; the client decides what to do next and tells you what it found.
+Fione's MCP endpoint lets an AI client such as Claude Code, Claude Desktop or Codex do the work you would do in the browser: create a project, upload a CSV, look at the data, decide how to train, start the training, wait for it, read the results and predict. Fione trains and predicts on its own server; the client decides what to do next and tells you what it found.
 
 This page walks through the situations it is meant for. The setting-by-setting reference is in [Assistant setup, privacy and MCP](/docs/assistant).
 
@@ -20,7 +20,14 @@ This page walks through the situations it is meant for. The setting-by-setting r
      --header "Authorization: Bearer <your token>"
    ```
 
-   Other clients that can send a header take the same URL and an `Authorization: Bearer <your token>` header; the reference has a JSON example. A client that can only start local programs, and cannot send a header to a remote URL, needs a bridge that adds it; check your client's documentation. That route has not been tried with Fione.
+   In Codex, which reads the token from an environment variable:
+
+   ```sh
+   export FIONE_TOKEN=<your token>
+   codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE_TOKEN
+   ```
+
+   Other clients that can send a header, such as Gemini CLI, take the same URL and an `Authorization: Bearer <your token>` header; the reference has a JSON example. A client that can only start local programs, and cannot send a header to a remote URL, needs a bridge that adds it; check your client's documentation. That route has not been tried with Fione.
 
 The read tools never return example values from your data, so a client that is only reading never sees a cell. Predictions are the exception: `predict` and `get_predictions` return the predicted labels and the class names. Values the client itself sends (the CSV it uploads, the rows it asks to predict) are its own.
 
@@ -44,7 +51,7 @@ The tools that change something say so, and a client such as Claude Code asks be
 
 ## A small CSV in a client without a shell
 
-Claude Desktop is one such client. A client without a shell cannot run `curl`, so it sends the CSV as text in one call: `upload_dataset` takes `project_id`, `name`, `type` (`train`, `test` or `predict`) and `csv_text`, up to 512 KiB of UTF-8. The model has to write the text out, so this suits small tables. Everything after the upload is the same as above.
+Claude Desktop is one such client. Codex in a sandbox without network access cannot reach the upload URL either, so it takes the same route. A client without a shell cannot run `curl`, so it sends the CSV as text in one call: `upload_dataset` takes `project_id`, `name`, `type` (`train`, `test` or `predict`) and `csv_text`, up to 512 KiB of UTF-8. The model has to write the text out, so this suits small tables. Everything after the upload is the same as above.
 
 If the file is too large, the tool says so and names `create_upload_url`; that needs a client with a shell, or you upload the file yourself in the browser and tell the client the dataset exists (`list_datasets` finds it).
 

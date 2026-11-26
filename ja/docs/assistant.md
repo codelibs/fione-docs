@@ -92,7 +92,7 @@ Fione の再起動時に実行中だった答えは、中断として終わり�
 
 ## MCP
 
-Fione は、同じ読み取り専用のツールを MCP クライアント (MCP に対応した AI アシスタントやエディター) に提供できます。2 つ目のスイッチを有効にすると、プロジェクトの作成、データセットのアップロード、ジョブの開始、予測を行うツールも提供します ([MCP クライアントからジョブを開始する](#mcp-クライアントからジョブを開始する)を参照)。想定している使い方は [MCP で Claude から AutoML を一通り実行する](/ja/guide/mcp)にあります。**既定ではオフ**です。`FIONE_MCP_ENABLED=true` を設定します (Compose では `docker/.env`)。エンドポイントは Fione 自身のポートの `/mcp` で、たとえば `http://127.0.0.1:8080/mcp` です。Streamable HTTP (POST 上の JSON-RPC、プロトコルバージョン 2025-03-26、2025-06-18、2025-11-25) で、セッションは持ちません。POST だけに JSON で応答し (イベントストリームとバッチはありません)、リクエストの本文は最大 1 MiB です。MCP がオフのとき、`/mcp` は 404 を返します。
+Fione は、同じ読み取り専用のツールを MCP クライアント (MCP に対応した AI アシスタントやエディター) に提供できます。2 つ目のスイッチを有効にすると、プロジェクトの作成、データセットのアップロード、ジョブの開始、予測を行うツールも提供します ([MCP クライアントからジョブを開始する](#mcp-クライアントからジョブを開始する)を参照)。想定している使い方は [MCP で AI ツールから AutoML を一通り実行する](/ja/guide/mcp)にあります。**既定ではオフ**です。`FIONE_MCP_ENABLED=true` を設定します (Compose では `docker/.env`)。エンドポイントは Fione 自身のポートの `/mcp` で、たとえば `http://127.0.0.1:8080/mcp` です。Streamable HTTP (POST 上の JSON-RPC、プロトコルバージョン 2025-03-26、2025-06-18、2025-11-25) で、セッションは持ちません。POST だけに JSON で応答し (イベントストリームとバッチはありません)、リクエストの本文は最大 1 MiB です。MCP がオフのとき、`/mcp` は 404 を返します。
 
 1. **アカウント**ページで API トークンを作成します。
 2. クライアントに URL と `Authorization: Bearer <your-token>` ヘッダーを設定します。多くのクライアントは次のような設定を受け付けます。
@@ -108,11 +108,15 @@ Fione は、同じ読み取り専用のツールを MCP クライアント (MCP 
 - ブラウザからのリクエスト (`Origin` ヘッダー付き) は、`localhost`、`127.0.0.1`、`[::1]` (ポートは問いません) または `FIONE_PUBLIC_URL` のオリジンからのものだけ受け付けます。ブラウザ上のクライアントが別のアドレスで Fione に接続するときは、これを設定してください。
 - 同時に処理される MCP リクエストは最大 2 つです (`initialize` やツール一覧を含むすべてのリクエストが数えられます)。ほかのリクエストは最大 15 秒待ち、その後「busy」と返されます。
 
-Claude Code には、同じ URL とヘッダーを渡します。
+Claude Code や Codex にも、同じ URL とトークンを渡します。
 
 ```sh
 claude mcp add --transport http fione http://127.0.0.1:8080/mcp \
   --header "Authorization: Bearer <your-token>"
+
+# Codex はトークンを環境変数から読みます
+export FIONE_TOKEN=<your-token>
+codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE_TOKEN
 ```
 
 ### MCP クライアントからジョブを開始する

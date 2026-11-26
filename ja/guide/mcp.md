@@ -1,11 +1,11 @@
 ---
-title: "MCP で Claude から AutoML を一通り実行する"
-description: "Claude Code や Claude Desktop を MCP で Fione につなぎ、CSV のアップロード、学習、ジョブの待機、リーダーボードの確認、予測まで進めます。制限と安全策も説明します。"
+title: "MCP で AI ツールから AutoML を一通り実行する"
+description: "Claude Code や Codex などの MCP クライアントを Fione につなぎ、CSV のアップロード、学習、ジョブの待機、リーダーボードの確認、予測まで進めます。制限と安全策も説明します。"
 ---
 
-# MCP で Claude から AutoML を一通り実行する
+# MCP で AI ツールから AutoML を一通り実行する
 
-Fione の MCP エンドポイントを使うと、Claude Code や Claude Desktop などの AI クライアントが、ブラウザで行う作業を代わりに進められます。プロジェクトの作成、CSV のアップロード、データの確認、学習方法の決定、学習の開始と待機、結果の確認、予測までです。学習と予測は Fione のサーバーで動き、クライアントは次に何をするかを決めて、わかったことを伝えます。
+Fione の MCP エンドポイントを使うと、Claude Code、Claude Desktop、Codex などの AI クライアントが、ブラウザで行う作業を代わりに進められます。プロジェクトの作成、CSV のアップロード、データの確認、学習方法の決定、学習の開始と待機、結果の確認、予測までです。学習と予測は Fione のサーバーで動き、クライアントは次に何をするかを決めて、わかったことを伝えます。
 
 このページでは、想定している使い方を場面ごとに説明します。設定項目ごとのリファレンスは[アシスタントの設定・プライバシー・MCP](/ja/docs/assistant)にあります。
 
@@ -20,7 +20,14 @@ Fione の MCP エンドポイントを使うと、Claude Code や Claude Desktop
      --header "Authorization: Bearer <your token>"
    ```
 
-   ヘッダーを送れるほかのクライアントも、同じ URL と `Authorization: Bearer <your token>` ヘッダーを使えます。リファレンスに JSON の例があります。ローカルのプログラムしか起動できず、リモートの URL にヘッダーを送れないクライアントでは、ヘッダーを付ける中継が必要です。クライアントのドキュメントを確認してください。この方法は Fione では試していません。
+   Codex では、トークンを環境変数から読ませます。
+
+   ```sh
+   export FIONE_TOKEN=<your token>
+   codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE_TOKEN
+   ```
+
+   ヘッダーを送れるほかのクライアント (Gemini CLI など) も、同じ URL と `Authorization: Bearer <your token>` ヘッダーを使えます。リファレンスに JSON の例があります。ローカルのプログラムしか起動できず、リモートの URL にヘッダーを送れないクライアントでは、ヘッダーを付ける中継が必要です。クライアントのドキュメントを確認してください。この方法は Fione では試していません。
 
 読み取りのツールはデータの値の例を返さないので、読むだけのクライアントがセルの中身を見ることはありません。例外は予測で、`predict` と `get_predictions` は予測したラベルとクラス名を返します。クライアント自身が送る値 (アップロードする CSV や、予測させる行) は、クライアントが持っているものです。
 
@@ -44,7 +51,7 @@ Claude は次の手順で進めます。それぞれが出力で確認できる�
 
 ## 小さな CSV (シェルのないクライアント)
 
-Claude Desktop もその 1 つです。シェルのないクライアントは `curl` を実行できないので、CSV を文章として 1 回の呼び出しで送ります。`upload_dataset` は `project_id`、`name`、`type` (`train`、`test`、`predict`)、`csv_text` を受け取り、UTF-8 で 512 KiB までです。モデルが文章をすべて書き出すので、小さな表向きです。アップロードのあとは上と同じです。
+Claude Desktop もその 1 つです。ネットワークに出られないサンドボックスで動く Codex も、アップロード用の URL に届かないので、同じ方法を使います。シェルのないクライアントは `curl` を実行できないので、CSV を文章として 1 回の呼び出しで送ります。`upload_dataset` は `project_id`、`name`、`type` (`train`、`test`、`predict`)、`csv_text` を受け取り、UTF-8 で 512 KiB までです。モデルが文章をすべて書き出すので、小さな表向きです。アップロードのあとは上と同じです。
 
 ファイルが大きすぎるときは、ツールがそう答えて `create_upload_url` を案内します。それにはシェルのあるクライアントが必要です。または、ブラウザでご自身がアップロードし、データセットがあることをクライアントに伝えます (`list_datasets` で見つかります)。
 
