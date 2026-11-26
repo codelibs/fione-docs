@@ -1,12 +1,12 @@
 ---
 layout: home
 title: Fione
-description: Fione is an open-source AutoML server. Upload a CSV, get a trained model and predictions, and serve the model as a prediction API. Fione itself starts with one docker compose up.
+description: "Open-source AutoML server: train a model from a CSV and use its predictions from AI tools such as Claude and Codex, your own service or the browser."
 
 hero:
   name: Fione
-  text: AutoML for everyone
-  tagline: Upload a CSV in your browser, get a trained model, make predictions and serve the model as an API.
+  text: Predictions your AI can use
+  tagline: An open-source AutoML server you run yourself. Train a model from a CSV, then predict from AI tools such as Claude and Codex, from your own service through the API, or in the browser. No machine-learning expertise needed.
   image:
     src: /fione-logo.svg
     alt: Fione
@@ -15,23 +15,23 @@ hero:
       text: Quick start
       link: /guide/installation
     - theme: alt
-      text: Overview
-      link: /guide/
+      text: Use it from AI tools
+      link: /guide/mcp
     - theme: alt
       text: View on GitHub
       link: https://github.com/codelibs/fione
 
 features:
+  - title: Use it from AI tools
+    details: With MCP switched on, AI tools such as Claude Code and Codex can upload a CSV, train, read the results and predict on your Fione server, and tell you what it found.
   - title: No machine-learning expertise needed
     details: The EasyML wizard takes you from a CSV to a rated model and a prediction file, with a plain-language explanation of the score.
-  - title: Its own AutoML engine
-    details: Gradient boosting, random forests, linear and neural models, and TF-IDF models for text, tuned with Optuna and ensembled within the run time you set.
+  - title: Predictions in your own service
+    details: A REST API, API tokens and the fione-sdk Python client, and Fione Serving, a small prediction API that runs any trained model on its own.
+  - title: Runs on your server
+    details: Training and prediction run on the server you start with docker compose up. Datasets and models are kept in the storage you set up for it, SeaweedFS by default.
   - title: Explains its models
     details: Diagnostics, column importance, partial dependence and the reasons for each prediction, with warnings for columns that give the answer away.
-  - title: Serve a model anywhere
-    details: Fione Serving is a small prediction API for any trained model, built once as a Docker image and run on the model files.
-  - title: Users, sharing and an API
-    details: Administrators, editors and viewers, per-user project sharing, API tokens, a REST API and the fione-sdk Python client.
-  - title: An assistant that only reads
-    details: Ask questions about your datasets and models, and let the assistant suggest a training run that you confirm.
+  - title: Open source
+    details: Apache License 2.0, developed on GitHub. Free for personal and commercial use.
 ---

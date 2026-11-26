@@ -1,22 +1,25 @@
 ---
 title: "Fione の概要: オープンソースの AutoML サーバー"
-description: Fione はオープンソースの AutoML サーバーです。CSV をアップロードしてモデルを学習し、予測し、予測 API として公開するまでをブラウザで行えます。
+description: Fione はオープンソースの AutoML サーバーです。CSV からモデルを学習し、その予測を Claude や Codex などの AI ツールから、API で自分のサービスから、ブラウザから使えます。
 ---
 
 # 概要
 
-Fione はオープンソースの AutoML サーバーです。ブラウザで CSV ファイルをアップロードすると、Fione がモデルを学習します。できあがったモデルで予測したり、予測 API として公開したりできます。起動は `docker compose up` 1 回だけです。
+Fione は、AI から使える予測を作るオープンソースの AutoML サーバーです。CSV ファイルを渡すと Fione がモデルを学習し、その予測を、MCP で Claude や Codex などの AI ツールから、REST API や Fione Serving で自分のサービスから、ブラウザから使えます。Fione は `docker compose up` 1 回で自分のサーバーで動き、学習と予測もそこで行われます。
 
 最初のモデルを作るのに、機械学習の経験は要りません。**EasyML ウィザード**は、何を予測したいかと Fione が作業してよい時間をたずね、結果を 1〜5 個の星の評価と、わかりやすい言葉の説明で示します。もっと細かく制御したいときは、詳細表示に切り替えると、すべての統計・学習設定・診断が見られます。
 
 ## 対象となる方
 
 - **機械学習が初めての方**: 表形式のデータ(1 行目に列名がある CSV)があり、コードを書かずにモデルと予測結果がほしい方。
+- **Claude や Codex などの AI ツールで仕事をしている方**: 会話の中のデータから推測させるのではなく、自分のサーバーで予測モデルを学習させ、その予測を使わせたい方。
+- **開発者**: 解約しそうな顧客、故障しそうな設備、顧客の購入金額などの予測を、自分で運用する API で自分のサービスに組み込みたい方。
 - **データサイエンティスト・アナリスト**: モデルを素早く学習し、交差検証の診断やモデルの説明を確認し、必要なら Python からすべてを自動化したい方。
 - **チーム**: データセットとモデルを共有の場所にまとめ、管理者・編集者・閲覧者で権限を分け、自分たちで運用する予測 API がほしい方。
 
 ## 主な機能
 
+- **MCP で AI ツールから使う**: Claude Code、Claude Desktop、Codex などの MCP クライアントが、Fione の MCP エンドポイントを通して、CSV のアップロード、学習、ジョブの待機、リーダーボードの確認、予測を行えます。詳しくは [MCP で AI ツールから AutoML を一通り実行する](/ja/guide/mcp) をご覧ください。
 - **EasyML ウィザード**: データのアップロード、データ分析(予測する列、入力する列、予測の種類、最大実行時間)、実行、予測結果サマリー、予測結果の CSV。詳しくは [EasyML ウィザード](/ja/guide/easyml) をご覧ください。
 - **AutoML 画面**: 列の統計とグラフ、相関、リーク警告、すべての学習設定、ジョブ一覧、リーダーボード、変数の重要度、スコアの履歴、CV の指標、モデルのエクスポートとインポート。詳しくは [AutoML 画面](/ja/guide/automl) をご覧ください。
 - **モデルの説明**: 交差検証の予測にもとづく診断、重要度と部分依存のグラフ、各予測の寄与度、答えを不自然なほどよく当てる列への警告。詳しくは [説明とリーク警告](/ja/guide/explanations) をご覧ください。
@@ -26,7 +29,6 @@ Fione はオープンソースの AutoML サーバーです。ブラウザで CS
 - **Python モジュール**: フレーム操作、k-means、低ランク分解などのデータ操作。管理者は独自のモジュールをアップロードできます。詳しくは [Python モジュール](/ja/guide/python-modules) をご覧ください。
 - **Python クライアント**: `fione-sdk` で、自分のスクリプトやノートブックから Fione を操作できます。詳しくは [Python クライアント (fione-sdk)](/ja/guide/sdk) をご覧ください。
 - **アシスタント**: プロジェクトのデータセットやモデルについての質問に答え、人が確認する学習を提案します。詳しくは [アシスタント](/ja/guide/assistant) をご覧ください。
-- **Claude などの MCP クライアント**: Claude Code や Claude Desktop が、Fione の MCP エンドポイントを通して、CSV のアップロード、学習、ジョブの待機、リーダーボードの確認、予測を行えます。詳しくは [MCP で Claude から AutoML を一通り実行する](/ja/guide/mcp) をご覧ください。
 - **ストレージ**: データセットとモデルは SeaweedFS または S3 互換のサービスに保存し、メタデータは SQLite に保存します。
 - 日本語と英語、ライトテーマとダークテーマに対応し、スマートフォンでも使えます。
 
@@ -40,9 +42,9 @@ Fione は、Docker Compose で起動するいくつかの部品でできてい�
 - **Fione Serving**は、必要なときにビルドする 2 つ目のイメージです。ダウンロードした 1 つのモデルを、Fione アプリケーションとは別のポートで予測 API として動かします。
 
 ```text
-ブラウザ / スクリプト ──► fione (Web アプリ、REST API、ジョブの実行) ──► SeaweedFS (S3): データセット、モデル
-                                  │                                      データボリューム: SQLite、秘密鍵
-                                  └──► 言語モデル (任意): Ollama または Claude
+ブラウザ / スクリプト / MCP ──► fione (Web アプリ、REST API、ジョブの実行) ──► SeaweedFS (S3): データセット、モデル
+                                        │                                      データボリューム: SQLite、秘密鍵
+                                        └──► 言語モデル (任意): Ollama または Claude
 
 サービング用ファイル (zip) ──► fione-serving ──► POST /invocations
 ```
@@ -50,7 +52,8 @@ Fione は、Docker Compose で起動するいくつかの部品でできてい�
 ## 次に読むページ
 
 1. [インストール](/ja/guide/installation): Fione を起動し、管理者を作成して、サンプルの CSV を用意します。
-2. [EasyML ウィザード](/ja/guide/easyml): モデルを学習し、予測して、モデルを公開します。
+2. [EasyML ウィザード](/ja/guide/easyml): モデルを学習し、予測して、モデルを公開します。AI ツールに任せることもできます: [MCP で AI ツールから AutoML を一通り実行する](/ja/guide/mcp)。
 3. [AutoML 画面](/ja/guide/automl) と [説明とリーク警告](/ja/guide/explanations): 詳細表示の使い方です。
-4. [ユーザーと共有](/ja/guide/users-sharing)、[Python モジュール](/ja/guide/python-modules)、[Python クライアント (fione-sdk)](/ja/guide/sdk)、[アシスタント](/ja/guide/assistant)、[Claude と MCP](/ja/guide/mcp)。
+4. [ユーザーと共有](/ja/guide/users-sharing)、[Python モジュール](/ja/guide/python-modules)、[Python クライアント (fione-sdk)](/ja/guide/sdk)、[アシスタント](/ja/guide/assistant)、[AI ツールと MCP](/ja/guide/mcp)。
 5. 運用する方へ: [設定](/ja/docs/configuration)、[運用](/ja/docs/operations)、[Fione Serving](/ja/docs/serving)、[既知の制限](/ja/docs/known-limitations)。
+6. 質問や不具合の報告: [ヘルプとサポート](/ja/guide/support)。
