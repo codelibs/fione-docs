@@ -68,6 +68,6 @@ codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE
 
 ## 提案 {#proposals}
 
-`propose_join` の結果は、キー `proposal` (`true`)、`kind` (`join`)、`config` (Join モジュールのパラメーター)、`warnings`、`rationale` を持ちます。`propose_first_join` はプロジェクトと、予測する列 `target` を受け取り、同じキーに加えて、選んだ基準のデータセット `dataset_id` を返します。**結合を提案**ボタンが提案するのと同じ結合です ([データセットの結合](/ja/guide/automl#join-datasets)を参照)。
+`propose_join` の結果は、キー `proposal` (`true`)、`kind` (`join`)、`config` (Join モジュールのパラメーター)、`warnings`、`rationale` を持ちます。`propose_first_join` はプロジェクトと、予測する列 `target` を受け取り、同じキーに加えて、選んだ土台のデータセット `dataset_id` を返します。**結合を提案**ボタンが提案するのと同じ結合です ([データセットの結合](/ja/guide/automl#join-datasets)を参照)。
 
 `propose_training_config` の結果は、キー `proposal` (`true`)、`config`、`ignored_suggestions`、`warnings`、`rationale` を持ちます。各警告は `{code, message, params}` のオブジェクトで、`message` は英語の文、`code` と `params` はどの言語の文でも組み立てられる形で警告を表します。`ignored_suggestions` の各要素は `{column, reason, code}` で、`reason` も英語です。
