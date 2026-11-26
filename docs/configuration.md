@@ -48,7 +48,7 @@ Read by the `fione` container at start. Booleans accept `true` / `false`.
 | `FIONE_LOGIN_MAX_FAILURES_PER_IP` | `50` | Failed password checks per client address in the window, whatever the usernames. | See [Behind a reverse proxy](#behind-a-reverse-proxy). |
 | `FIONE_TRUST_PROXY` | `false` | Takes the client address and host from `X-Forwarded-For` / `X-Forwarded-Host` (the last value, the one your proxy added). | Set `true` only behind a reverse proxy that sets these headers. |
 | `FIONE_SETUP_TOKEN` | unset | The token that creates the first administrator, at least 16 characters. When unset, Fione generates one and writes it to the log at every start until an administrator exists. | To choose it yourself (`docker/.env`). |
-| `FIONE_PUBLIC_URL` | unset | Fione's own origin as browsers reach it (`scheme://host[:port]`, no path), for example `https://fione.example.com`. The MCP endpoint accepts browser requests (`Origin`) only from this origin and from `localhost`. | When a browser-based MCP client reaches Fione at another address. Behind a TLS proxy, give the `https` origin: Fione cannot tell it. Also the address in the one-time upload URLs that MCP clients get (`create_upload_url`); without it they use the `Host` of the request (`FIONE_TRUST_PROXY` does not change this), which a reverse proxy often rewrites to an internal name. |
+| `FIONE_PUBLIC_URL` | unset | Fione's own origin as browsers reach it (`scheme://host[:port]`, no path), for example `https://fione.example.com`. The MCP endpoint accepts browser requests (`Origin`) only from this origin and from `localhost`, `127.0.0.1` or `[::1]`. | When a browser-based MCP client reaches Fione at another address. Behind a TLS proxy, give the `https` origin: Fione cannot tell it. Also the address in the one-time upload URLs that MCP clients get (`create_upload_url`); without it they use the `Host` of the request (`FIONE_TRUST_PROXY` does not change this), which a reverse proxy often rewrites to an internal name. |
 
 ### Assistant (language model) and MCP
 
@@ -157,7 +157,7 @@ server {
         proxy_pass http://127.0.0.1:8080;
         proxy_set_header Host $http_host;  # required: forms check that Origin matches Host
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $http_host;  # with FIONE_TRUST_PROXY: replaces a value the client sent
         proxy_request_buffering off;       # stream large uploads
         proxy_read_timeout 300s;
     }

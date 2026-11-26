@@ -48,7 +48,7 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LOGIN_MAX_FAILURES_PER_IP` | `50` | 期間内に、ユーザー名に関係なくクライアントアドレスごとにパスワード確認が失敗できる回数。 | [リバースプロキシの背後で使う](#リバースプロキシの背後で使う)を参照。 |
 | `FIONE_TRUST_PROXY` | `false` | クライアントアドレスとホストを `X-Forwarded-For` / `X-Forwarded-Host` から取ります (最後の値、つまりプロキシが追加した値)。 | これらのヘッダーを付けるリバースプロキシの背後でのみ `true`。 |
 | `FIONE_SETUP_TOKEN` | 未設定 | 最初の管理者を作成するトークン (16 文字以上)。未設定のときは Fione が生成し、管理者ができるまで起動のたびにログへ出力します。 | 自分で決めたいとき (`docker/.env`)。 |
-| `FIONE_PUBLIC_URL` | 未設定 | ブラウザから見た Fione 自身のオリジン (`scheme://host[:port]`、パスなし)。例: `https://fione.example.com`。MCP エンドポイントは、ブラウザからのリクエスト (`Origin`) をこのオリジンと `localhost` からのものだけ受け付けます。 | ブラウザ上の MCP クライアントが別のアドレスで Fione に接続するとき。TLS プロキシの背後では `https` のオリジンを指定してください。Fione には分かりません。また、MCP クライアントが受け取る一度だけのアップロード URL (`create_upload_url`) のアドレスにもなります。未設定のときはリクエストの `Host` が使われ (`FIONE_TRUST_PROXY` の影響は受けません)、リバースプロキシが内部の名前に書き換えていることがよくあります。 |
+| `FIONE_PUBLIC_URL` | 未設定 | ブラウザから見た Fione 自身のオリジン (`scheme://host[:port]`、パスなし)。例: `https://fione.example.com`。MCP エンドポイントは、ブラウザからのリクエスト (`Origin`) をこのオリジンと `localhost`、`127.0.0.1`、`[::1]` からのものだけ受け付けます。 | ブラウザ上の MCP クライアントが別のアドレスで Fione に接続するとき。TLS プロキシの背後では `https` のオリジンを指定してください。Fione には分かりません。また、MCP クライアントが受け取る一度だけのアップロード URL (`create_upload_url`) のアドレスにもなります。未設定のときはリクエストの `Host` が使われ (`FIONE_TRUST_PROXY` の影響は受けません)、リバースプロキシが内部の名前に書き換えていることがよくあります。 |
 
 ### アシスタント (言語モデル) と MCP
 
@@ -157,7 +157,7 @@ server {
         proxy_pass http://127.0.0.1:8080;
         proxy_set_header Host $http_host;  # 必須: フォームは Origin と Host の一致を確認する
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $http_host;  # FIONE_TRUST_PROXY のとき、クライアントが送った値を置き換えます
         proxy_request_buffering off;       # 大きなアップロードをストリーミングする
         proxy_read_timeout 300s;
     }
