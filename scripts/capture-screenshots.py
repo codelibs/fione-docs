@@ -6,6 +6,12 @@ publishes http://127.0.0.1:18080), with the assistant off as in a default instal
 Compose file of your own that sets, for the ``fione`` service, ``FIONE_LLM_PROVIDER: none``,
 empty ``FIONE_LLM_BASE_URL`` and ``FIONE_LLM_MODEL``, ``FIONE_LLM_AUTO_PULL: "false"`` and
 ``FIONE_PUBLIC_URL: http://127.0.0.1:8080`` (the MCP address the System status page shows).
+Pass that file last, so its values win over the e2e ones (the fake LLM service still starts,
+unused):
+
+    docker compose --env-file docker/e2e.env -f docker/compose.yaml \
+        -f docker/compose.e2e.yaml -f <your override> up -d --build --wait
+
 Start it on a fresh volume (no administrator yet), then, with Playwright's Chromium installed:
 
     FIONE_SETUP_TOKEN=<token of docker/e2e.env> \
