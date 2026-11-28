@@ -22,7 +22,7 @@ description: "Fione の任意機能のアシスタントを Ollama または Cla
 
 Fione にはモデルは同梱されておらず、何もインストールされません。設定の方法は次のとおりです。
 
-- **macOS。** Mac に Ollama アプリをインストールし、`docker/.env` に `FIONE_LLM_PROVIDER=ollama` を設定します。Compose の構成は `http://host.docker.internal:11434/v1` でそれに接続し、`gemma4:12b-mlx` を要求します。このモデルは Mac の GPU で動きます (コンテナからは GPU を使えないため、Ollama はホストで動かします)。Ollama の既定のコンテキストは 4096 トークンと小さいことがあり、アシスタントのツールには足りません。16384 以上にしてください。Ollama アプリの設定にあるコンテキスト長のスライダーで変えるか、`launchctl setenv OLLAMA_CONTEXT_LENGTH 16384` を実行してから Ollama アプリを再起動します (どちらも Ollama のドキュメントにある方法です)。**システムの状態** ページがコンテキストの不足を警告するのは、モデルが読み込まれている間だけです。Ollama は読み込まれたモデルのコンテキストしか報告しないためです。そのあと管理者が、**システムの状態**ページの**モデルをダウンロード**でモデルをダウンロードします。
+- **macOS。** Mac に Ollama アプリをインストールし、`docker/.env` に `FIONE_LLM_PROVIDER=ollama` を設定します。Compose の構成は `http://host.docker.internal:11434/v1` でそれに接続し、`gemma4:12b-mlx` を要求します。このモデルは Mac の GPU で動きます (コンテナからは GPU を使えないため、Ollama はホストで動かします)。Ollama の既定のコンテキスト 4096 トークンはアシスタントのツールには小さすぎるので、`OLLAMA_CONTEXT_LENGTH=16384` を設定してください。macOS の Ollama アプリでは、[Ollama の FAQ](https://docs.ollama.com/faq) のとおり、`launchctl setenv OLLAMA_CONTEXT_LENGTH 16384` を実行してから Ollama アプリを再起動します。**システムの状態** ページがコンテキストの不足を警告するのは、モデルが読み込まれている間だけです。Ollama は読み込まれたモデルのコンテキストしか報告しないためです。そのあと管理者が、**システムの状態**ページの**モデルをダウンロード**でモデルをダウンロードします。
 - **Linux、またはホストに Ollama がない場合。** Compose の中で Ollama を動かします。`docker/.env` の「Linux, or no Ollama on the host」のブロックのコメントを外して、通常どおりスタックを起動します。
 
   ```sh
@@ -105,7 +105,7 @@ Fione の再起動時に実行中だった答えは、中断として終わり�
 | Fione が起動せず「set while the assistant is off」と出る | 提供元なしにモデルの設定 (`FIONE_LLM_BASE_URL`、`FIONE_LLM_MODEL`、`FIONE_LLM_API_KEY`、`FIONE_LLM_EXTRA_BODY`、`FIONE_LLM_AUTO_PULL=true`) があります。`FIONE_LLM_PROVIDER` を設定するか、その設定を外します。 |
 | 「言語モデルのサーバーに接続できません」 | Ollama は動いていますか。`FIONE_LLM_BASE_URL` は Fione のコンテナから届きますか (Mac では `host.docker.internal`)。Claude の場合、Fione のコンテナから Anthropic API のアドレス (`https://api.anthropic.com`、または `FIONE_LLM_BASE_URL` のゲートウェイ) に、必要なら `HTTPS_PROXY` 経由で届きますか。使用中のアドレスは**システムの状態**ページに表示されます。 |
 | 「言語モデルはまだダウンロードされていません」 | 管理者が**システムの状態**ページで**モデルをダウンロード**を押します。または `FIONE_LLM_AUTO_PULL=true` を設定します。 |
-| 「アシスタントのツールには小さすぎます」 | `FIONE_LLM_CONTEXT_TOKENS` を、`FIONE_LLM_MAX_TOKENS` にアシスタントが必要とする分を足した値より大きくします。Ollama ではコンテキストを 16384 にし (`OLLAMA_CONTEXT_LENGTH=16384`、または Ollama アプリのコンテキスト長のスライダー。上記を参照)、`FIONE_LLM_CONTEXT_TOKENS=16384` を設定します。 |
+| 「アシスタントのツールには小さすぎます」 | `FIONE_LLM_CONTEXT_TOKENS` を、`FIONE_LLM_MAX_TOKENS` にアシスタントが必要とする分を足した値より大きくします。Ollama ではコンテキストを 16384 にし (`OLLAMA_CONTEXT_LENGTH=16384`。macOS のアプリでは上記の `launchctl setenv`)、`FIONE_LLM_CONTEXT_TOKENS=16384` を設定します。 |
 | 「管理者がアシスタントの準備を終えると、アシスタントを使えるようになります」 | 管理者が**アシスタントの準備**ページ (バナーからリンクされています) で、リモートのホストを確認します。 |
 | 「API キーを受け付けませんでした」 | `FIONE_LLM_API_KEY` を確認してください。状態は**システムの状態**ページに表示されます。 |
 | 「この API キーでは使えません」 | `FIONE_LLM_MODEL` のモデル名がキーで使えません。名前と、キーの組織がそのモデルを使えるかを確認してください。Anthropic API の応答を伴わない 404 (そのアドレスを持たないゲートウェイなど) は、代わりに「エラーを返しました」と表示されます。 |
