@@ -46,9 +46,9 @@ For the iris data, keep the suggestions, choose **1 min** under **Maximum run ti
 
 ## 4. Run
 
-The progress page, **Training your model**, shows what Fione is doing: the models tried so far, the best error so far, the time elapsed and the time left. The page updates by itself. Training runs on the server, so you can leave the page and come back later; **Stop training** ends it without saving a model.
+The progress page, **Training your model**, shows what Fione is doing: the models tried so far, the best error so far, the time elapsed and the time left. The page updates by itself. Training runs on the server, so you can leave the page and come back later; **Stop training** ends it without saving a model. Once the job has ended (done, failed or stopped), the same page is headed **Model training**.
 
-![The progress of a run](./img/progress.png)
+![A run that has ended](./img/progress.png)
 
 When training ends, press **See the prediction summary**.
 

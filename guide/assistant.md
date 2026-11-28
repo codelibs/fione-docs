@@ -13,7 +13,7 @@ The assistant is off by default: it needs a language model, which an administrat
 
 ## The first start
 
-Once an administrator has turned the assistant on, it needs its language model. The model is a large download (about 8 GB for the Ollama server in Compose), and the **System status** page shows its progress.
+Once an administrator has turned the assistant on, it needs its language model. The model is a large download (about 8 GB for the Ollama server in Compose), and the **System status** page shows its progress. With the Ollama app on a Mac, the administrator also raises its context to at least 16384 tokens, with the context length slider in the app's settings or `launchctl setenv OLLAMA_CONTEXT_LENGTH 16384` and a restart of the app; Ollama's default can be too small for the assistant's tools (see [Assistant setup and privacy](/docs/assistant)). The **System status** page warns about a context that is too small only while the model is loaded.
 
 When the assistant is on but cannot answer (the server is not reachable, the model is missing or being downloaded, the API key is refused, or an administrator has not yet allowed sending data to a remote server), every signed-in person sees a banner on each page that says why. For administrators the banner links to the **System status** page, or to **Assistant setup** (the link reads **Finish the assistant setup**) when the consent is missing. Inside a project, everyone else gets a link to its assistant. The **Assistant** page and the **Assistant setup** page have no banner: they say the same in their own body, and the question box of the **Assistant** page is disabled. Everything else in Fione keeps working.
 
@@ -40,7 +40,19 @@ A comment is written by the same model, with the same consent, tools and limits 
 
 ## Proposals and confirmation
 
-When you ask for a training ("train a model to predict species"), the assistant checks the dataset and shows a **Training proposal** card: the dataset, the column to predict, the task, the time limit (each with a plain reason), the columns it suggests leaving out, and what to check. The reasons and the things to check are written in plain words in the language of the page, not as technical terms.
+When you ask for a training ("train a model to predict species"), the assistant checks the dataset and shows a **Training proposal** card: the **Dataset**, the **Column to predict**, the **Task** and the **Time limit (seconds)** (each with a plain reason), the **Columns left out** and the **Things to check**. When the proposal sets them, the card also shows **Choosing the predicted class** (with **Cost of a miss** and **Cost of a false alarm** for the lowest cost), **Learning the target**, **Ranking metric**, **Keep related rows together by** and **Order of the rows in time**. The reasons and the things to check are written in plain words in the language of the page, not as technical terms.
+
+You can ask for these in your own words, such as "a missed fraud costs 100 and a false alarm 5" or "keep the rows of one customer together". Among the things to check, the card can say that:
+
+- the table is so wide that preparing it may take most of the time limit, so the run may end without a model;
+- the table has far more input columns than rows, so the validation score may look better than the model will do;
+- the column to predict looks like a time and another column like whether the event happened, so it can be trained as a time that may be cut short;
+- the dates of the test data are all later than those of the training data, so **Order of the rows in time** checks the model on later rows;
+- the rows look like a panel of series, for which lags and rolling statistics per series usually help the most;
+- with the lowest cost, which class a miss and a false alarm refer to, so you can check they are the right way round;
+- whole-number answers are read as a number to predict, though they may be classes;
+- two columns together fix the answer, and may give it away;
+- a column repeats over rows and the test data lacks it, so the proposal keeps its rows together and leaves it out as an input.
 
 People who can edit the project press **Start training** (the job starts exactly as shown, once) or **Dismiss**. Viewers see the card without buttons. A decided proposal is final; open the job from its card.
 

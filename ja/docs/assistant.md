@@ -22,7 +22,7 @@ description: "Fione の任意機能のアシスタントを Ollama または Cla
 
 Fione にはモデルは同梱されておらず、何もインストールされません。設定の方法は次のとおりです。
 
-- **macOS。** Mac に Ollama アプリをインストールし、`docker/.env` に `FIONE_LLM_PROVIDER=ollama` を設定します。Compose の構成は `http://host.docker.internal:11434/v1` でそれに接続し、`gemma4:12b-mlx` を要求します。このモデルは Mac の GPU で動きます (コンテナからは GPU を使えないため、Ollama はホストで動かします)。Ollama の既定のコンテキスト 4096 トークンはアシスタントのツールには小さすぎるので、`OLLAMA_CONTEXT_LENGTH=16384` を付けて起動してください (アプリへの設定方法は Ollama の FAQ を参照)。そのあと管理者が、**システムの状態**ページの**モデルをダウンロード**でモデルをダウンロードします。
+- **macOS。** Mac に Ollama アプリをインストールし、`docker/.env` に `FIONE_LLM_PROVIDER=ollama` を設定します。Compose の構成は `http://host.docker.internal:11434/v1` でそれに接続し、`gemma4:12b-mlx` を要求します。このモデルは Mac の GPU で動きます (コンテナからは GPU を使えないため、Ollama はホストで動かします)。Ollama の既定のコンテキストは 4096 トークンと小さいことがあり、アシスタントのツールには足りません。16384 以上にしてください。Ollama アプリの設定にあるコンテキスト長のスライダーで変えるか、`launchctl setenv OLLAMA_CONTEXT_LENGTH 16384` を実行してから Ollama アプリを再起動します (どちらも Ollama のドキュメントにある方法です)。**システムの状態** ページがコンテキストの不足を警告するのは、モデルが読み込まれている間だけです。Ollama は読み込まれたモデルのコンテキストしか報告しないためです。そのあと管理者が、**システムの状態**ページの**モデルをダウンロード**でモデルをダウンロードします。
 - **Linux、またはホストに Ollama がない場合。** Compose の中で Ollama を動かします。`docker/.env` の「Linux, or no Ollama on the host」のブロックのコメントを外して、通常どおりスタックを起動します。
 
   ```sh
@@ -42,7 +42,7 @@ Fione にはモデルは同梱されておらず、何もインストールさ�
   FIONE_LLM_API_KEY=<your-api-key>
   ```
 
-Compose を使わない場合、同じ設定は Fione プロセスの環境変数です。Compose 構成で `docker/.env` から Fione に届くのは、公開 URL、提供元、ベース URL、モデル、API キー、自動ダウンロード、MCP の設定だけです。それ以外 (`FIONE_LLM_EXTRA_BODY`、`FIONE_LLM_MAX_TOKENS`、`FIONE_LLM_CONTEXT_TOKENS`、`FIONE_LLM_MAX_TOOL_ROUNDS`、`FIONE_LLM_TURN_TIMEOUT_SECS`、`FIONE_LLM_MAX_CONCURRENT_TURNS`) は、`docker/compose.yaml` の `fione` サービスの `environment` に書きます。`FIONE_LLM_MAX_TOKENS` と `FIONE_LLM_CONTEXT_TOKENS` の既定は、Ollama では 1024 と 16384、Claude では 16000 と 200000 です。コンテキストから返答の分を引いた残りが 5,240 トークン未満だと、指示とツールが収まらないため Fione は起動しません。すべての設定は[設定リファレンス](/ja/docs/configuration)にあります。
+Compose を使わない場合、同じ設定は Fione プロセスの環境変数です。Compose 構成で `docker/.env` から Fione に届くのは、公開 URL、提供元、ベース URL、モデル、API キー、自動ダウンロード、MCP の設定だけです。それ以外 (`FIONE_LLM_EXTRA_BODY`、`FIONE_LLM_MAX_TOKENS`、`FIONE_LLM_CONTEXT_TOKENS`、`FIONE_LLM_MAX_TOOL_ROUNDS`、`FIONE_LLM_TURN_TIMEOUT_SECS`、`FIONE_LLM_MAX_CONCURRENT_TURNS`) は、`docker/compose.yaml` の `fione` サービスの `environment` に書きます。`FIONE_LLM_MAX_TOKENS` と `FIONE_LLM_CONTEXT_TOKENS` の既定は、Ollama では 1024 と 16384、Claude では 16000 と 200000 です。コンテキストから返答の分を引いた残りが 5,560 トークン未満だと、指示とツールが収まらないため Fione は起動しません。すべての設定は[設定リファレンス](/ja/docs/configuration)にあります。
 
 Linux では、ホストの Ollama には Docker のホストゲートウェイ経由で接続するので、ループバック以外のアドレスでも待ち受ける必要があります (`OLLAMA_HOST=0.0.0.0`)。Ollama には認証がないので、これはネットワークへの公開を意味します。Docker のブリッジアドレスにバインドしてファイアウォールで守るか、公開されない Compose の `ollama` プロファイルを使ってください。
 
@@ -105,7 +105,7 @@ Fione の再起動時に実行中だった答えは、中断として終わり�
 | Fione が起動せず「set while the assistant is off」と出る | 提供元なしにモデルの設定 (`FIONE_LLM_BASE_URL`、`FIONE_LLM_MODEL`、`FIONE_LLM_API_KEY`、`FIONE_LLM_EXTRA_BODY`、`FIONE_LLM_AUTO_PULL=true`) があります。`FIONE_LLM_PROVIDER` を設定するか、その設定を外します。 |
 | 「言語モデルのサーバーに接続できません」 | Ollama は動いていますか。`FIONE_LLM_BASE_URL` は Fione のコンテナから届きますか (Mac では `host.docker.internal`)。Claude の場合、Fione のコンテナから Anthropic API のアドレス (`https://api.anthropic.com`、または `FIONE_LLM_BASE_URL` のゲートウェイ) に、必要なら `HTTPS_PROXY` 経由で届きますか。使用中のアドレスは**システムの状態**ページに表示されます。 |
 | 「言語モデルはまだダウンロードされていません」 | 管理者が**システムの状態**ページで**モデルをダウンロード**を押します。または `FIONE_LLM_AUTO_PULL=true` を設定します。 |
-| 「アシスタントのツールには小さすぎます」 | `FIONE_LLM_CONTEXT_TOKENS` を、`FIONE_LLM_MAX_TOKENS` にアシスタントが必要とする分を足した値より大きくします。Ollama では `OLLAMA_CONTEXT_LENGTH=16384` を付けて起動し、`FIONE_LLM_CONTEXT_TOKENS=16384` を設定します。 |
+| 「アシスタントのツールには小さすぎます」 | `FIONE_LLM_CONTEXT_TOKENS` を、`FIONE_LLM_MAX_TOKENS` にアシスタントが必要とする分を足した値より大きくします。Ollama ではコンテキストを 16384 にし (`OLLAMA_CONTEXT_LENGTH=16384`、または Ollama アプリのコンテキスト長のスライダー。上記を参照)、`FIONE_LLM_CONTEXT_TOKENS=16384` を設定します。 |
 | 「管理者がアシスタントの準備を終えると、アシスタントを使えるようになります」 | 管理者が**アシスタントの準備**ページ (バナーからリンクされています) で、リモートのホストを確認します。 |
 | 「API キーを受け付けませんでした」 | `FIONE_LLM_API_KEY` を確認してください。状態は**システムの状態**ページに表示されます。 |
 | 「この API キーでは使えません」 | `FIONE_LLM_MODEL` のモデル名がキーで使えません。名前と、キーの組織がそのモデルを使えるかを確認してください。Anthropic API の応答を伴わない 404 (そのアドレスを持たないゲートウェイなど) は、代わりに「エラーを返しました」と表示されます。 |

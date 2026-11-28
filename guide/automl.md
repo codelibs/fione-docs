@@ -131,11 +131,13 @@ A classification model predicts the class with the largest probability. When one
 
 **Fit to the ranking metric (two classes, or up to 50 with QWK)** (`decision: "tuned"`) chooses the decision from the cross-validation predictions of the final blend: for two classes, the probability threshold that scores best by the **Ranking metric**; with **Quadratic weighted kappa (classification)** and up to 50 ordered classes, cut points on the expected class. The ranking metric must count right answers (accuracy, error rate, balanced accuracy, mean error per class, F1, macro F1, MCC, kappa or quadratic weighted kappa), or the training is refused (also when it is left on **Automatic**, which is log loss).
 
-**Adjust for class sizes** cannot be combined with **Balance the classes**, which corrects the same imbalance while learning. Both decisions are ignored for regression. The training settings page shows a tip when the rarest class is a small share of the rows, and when the classes are ordered whole numbers. The default, **Most likely class**, picks the largest probability.
+**Lowest cost (two classes, with the cost of a miss and of a false alarm)** (`decision: "cost"`) is for a miss and a false alarm that cost different amounts (a fraud let through, a good payment held for a check). It is not on the form: set it through the [Python client](/guide/sdk), the [REST API](/docs/rest-api) or the MCP tool `propose_training_config` (see [MCP](/docs/mcp#proposals)), or ask the assistant for it. It takes `cost_miss`, the cost of a row of the class listed last (the largest label in sorted order) that is given the other class, and `cost_false_alarm`, the cost of the opposite: numbers above 0 and up to 1e12 in the same unit, refused without this decision. Fione picks the probability threshold with the lowest total cost on the validation predictions instead of 0.5, and a notice gives the cost per row at that threshold and at the most likely class. A cost is one number for every row; a cost that differs by row (the amount of each payment) is not used. Unlike **Fit to the ranking metric**, it works with any **Ranking metric**, which still ranks the models. The threshold is stored with the model and used like the one above, and the probabilities do not change. It is chosen on the same validation predictions the cost is reported on, so that cost is somewhat optimistic, most with few rows of the rare class.
+
+**Adjust for class sizes** cannot be combined with **Balance the classes**, which corrects the same imbalance while learning. Every decision but **Most likely class** is ignored for regression. The training settings page shows a tip when the rarest class is a small share of the rows, and when the classes are ordered whole numbers. The default, **Most likely class**, picks the largest probability.
 
 ## Text columns {#text-columns}
 
-A column of running text (for example, the median value has five words or more, or the values are mostly different phrases of several words) is read in two ways; the text models read the first three such columns. Its topics become derived features (see below). A model family called TextLinear also reads its words: a logistic (or ridge) regression on the TF-IDF weights of words and word pairs, with the other columns beside them, learned again on each training fold. It joins the search and the ensemble only for data with such a column, and its predictions are mixed with the other families' by the same cross-validation scores.
+A column of running text (for example, the median value has five words or more, or the values are mostly different phrases of several words) is read in two ways, and so is a column of [notations](#notations); the text models read the first three such columns. Its topics become derived features (see below). A model family called TextLinear also reads its words: a logistic (or ridge) regression on the TF-IDF weights of words and word pairs, with the other columns beside them, learned again on each training fold. It joins the search and the ensemble only for data with such a column, and its predictions are mixed with the other families' by the same cross-validation scores.
 
 Three variants of it are *late candidates*:
 
@@ -144,6 +146,12 @@ Three variants of it are *late candidates*:
 - **TextLinearPlain** works without the derived features; it is tried only when derived features were added.
 
 They run after all the other families, in the time kept for the late candidates (see [How the run time is spent](#how-the-run-time-is-spent)); that time is taken from the other families, not from TextLinear. They are not run for data without a text column.
+
+When the text columns are the only inputs that carry anything (the other columns, if any, have a different value on every row), only the text families are searched, and a notice names the families left out. A family called TextEmbedding reads the vectors of a language model instead of the words; it is set by script (see [Language-model vectors of text](#text-embedding)).
+
+### Notations {#notations}
+
+A column of notations without spaces, such as molecules written as SMILES or DNA and protein sequences, is read as text too: its values are mostly different, 15 characters or longer and of varying length, or of one length when they are an aligned sequence (100 characters or longer, written in at most 30 different characters, nearly all letters, which an ID or a hash of one length is not). TextLinearChar reads such a column although it has no spaces, and the derived features count its characters (see [Derived features](#derived-features)).
 
 A text column with more than 200 different values is otherwise read by the models as how often each value occurs; see [Known limitations](/docs/known-limitations).
 
@@ -155,16 +163,43 @@ Every value must be above -1, and the setting is ignored for classification. The
 
 ## Settings for scripts {#settings-for-scripts}
 
-Two settings of a regression are not on the form; set them through the [Python client](/guide/sdk#train-wait-predict) or the [REST API](/docs/rest-api):
+Some settings are not on the form; set them through the [Python client](/guide/sdk#train-wait-predict) or the [REST API](/docs/rest-api). Two are for a regression:
 
 - **`quantile`** (between 0 and 1) learns that quantile of the target instead of its mean, with the pinball loss. Only LightGBM, XGBoost and CatBoost are searched and no derived features are tried, each with a notice.
 - **`event_column`** is for a target that is a time which may be cut short (survival): the column holds 1 when the event happened at that time and 0 when the row was only seen up to it. The prediction is then a score from 0 to 1 that grows with the time, not a time; the models are ranked by the concordance, and the rating is based on it. It cannot be combined with `quantile` or with **Logarithm (log1p)**.
+
+The decision `cost`, with `cost_miss` and `cost_false_alarm`, is described in [Choosing the predicted class](#choosing-the-predicted-class).
+
+### Extra training data {#extra-training-data}
+
+More rows of the same kind often help more than any setting: older data, another store's history, a public data set of the same task. Give them as extra data: `extra_dataset_ids` in the REST API, the Python client's `train` and the MCP tool `start_training`, at most 10 other training datasets of the project. The models learn from them in every fold and in the final fit, but they are never validated: every score, the cross-validation predictions and the leaderboard count the rows of the main dataset alone.
+
+- The extra datasets need the column to predict and every column the model reads (columns in `ignored_columns` are not needed). Their values are read as the main dataset's are; a value that cannot be, or a class the main dataset lacks, is refused.
+- A row whose inputs equal those of a row of the main dataset is left out, since the validation would find it learned. Near copies are not found: leave them out of the extra data.
+- `extra_weight` (above 0; 1 by default) weights the extra rows against the main rows while learning; lower it for rows that are less alike. Scores are never weighted.
+- With **Keep related rows together by**, extra rows that have the column are left out of the folds that validate their group; extra rows without it are learned from in every fold, and a notice says so. The class shares that **Adjust for class sizes** corrects for count the extra rows too.
+- Not with **Order of the rows in time** (`time_column`) or `event_column`.
+- Every fold fits the extra rows too, so a large extra data set leaves time for fewer tries, and the recommended run time does not count it: give such a run a longer maximum run time, and check on the leaderboard that the family that suits the data had more than its first try. The number of cross-validation repeats is decided by all the rows.
+
+### Language-model vectors of text {#text-embedding}
+
+With `embedding_backend` set, a family called TextEmbedding joins the search, with the share of the search time TextLinear has: a logistic (or ridge) regression on the vectors of the running-text columns, each the mean over a text's tokens of one hidden layer of a pretrained language model. They carry how a text is written as well as what it is about. It stays in the model only when it improves the ensemble.
+
+| Setting | Meaning |
+|---|---|
+| `embedding_backend` | The backend that turns texts into vectors: `torch_lm`, a Hugging Face model read with torch and transformers. Unset (the default), TextEmbedding is not tried. |
+| `embedding_model` | A label for the model, not a path. |
+| `embedding_layer` | The layer, as a fraction of the model's depth (above 0, at most 1; 0.75 by default). |
+| `embedding_max_length` | The longest text read, in tokens (1 to 8192; 384 by default). |
+
+Every vector is kept in a cache keyed by the backend, the model, the layer, the length and the text, so a text is embedded once. `FIONE_EMBEDDING_CACHE_DIR` is the cache and `FIONE_EMBEDDING_MODEL_DIR` the model's directory for `torch_lm` (see [Configuration](/docs/configuration#embedding)). The standard Fione image includes neither torch and transformers nor a model, so there TextEmbedding needs a cache that already holds the vector of every text, filled where the backend runs (a machine with a GPU, with `fione.engine.embedding.extract`). Where a text is neither in the cache nor embeddable, training stops at the start and a prediction for that text fails, saying so. A trained model keeps the fingerprint of what it read, never a path.
 
 ## Derived features {#derived-features}
 
 With **Add derived features** (`feature_engineering` in the API, on by default), Fione builds features from your columns and chooses among them by validation. Most never read the target; the few that do are computed for each training row from the other folds, so a row never sees its own answer:
 
 - **Text columns:** the similarity of two text columns; the common words (letter runs, so `C85` gives `c`) as 0/1 flags, plus length, word count, share of digits and capitals and the first number. For running text (a median of five words or more) also 32 *topics*, the main directions of word use found by an SVD of the word weights (TF-IDF).
+- **Notations** (see [Notations](#notations); up to six columns): the value's length and the share of each of the 40 characters most frequent in the training rows, with the rarer ones and any character not seen in training in one share, `other`.
 - **Categories:** how common each is, and how common each pair is (also pairs of columns that repeat the same entity). Whole-number codes can be read as categories, and for two classes a small model per value of a column can score each class. A text column of 1,000 values or more that the models read as frequencies can also get the target rate of each value.
 - **Identifiers:** a text column (two of them at most) with at least 12 distinct values and no spaces, whose values (the first 1,000 non-missing ones are judged) split by `_`, `/`, `-`, `:` or `.` into the same two to four fields on at least 95% of them (`0001_01`, `B/0/P`), gets one feature per field: the number for a numeric field and how common the value is otherwise, plus the number of training rows that share the first field (the size of a group). A value not seen in training gives a missing feature, not zero. Fixed-length codes also give their characters as features.
 - **Rows:** the number of missing values and of zeros, statistics of the numbers in a row, and of each set of alike columns (distinct values, repeats, range, order).
@@ -181,7 +216,7 @@ Training, batch predictions, explanations, model exports and Python modules all 
 
 ![The job list](./img/jobs.png)
 
-A job's page shows its status, a progress bar and the elapsed time; for a training also the time left (at most), the models tried and the best error so far (measured on rows the models did not learn from; lower is better). It updates by itself. **Stop training** (or the matching button of the other kinds) stops the job after you confirm; a stopped training saves no model. When the job is done, Fione takes you to the result: for a training, the prediction summary of the new model. To open the job page of a trained model later, use the **Training job** link on the **Overview** tab of its model page. A failed job shows its message. Once a job has finished, **See details** lists the notices and errors of the run (the last 20, in English), for example that the folds were lowered, that a family was left out, that the validated score is too good to be true, or that a column may give the answer away.
+A job's page shows its status, a progress bar and the elapsed time; for a training also the time left (at most), the models tried and the best error so far (measured on rows the models did not learn from; lower is better). It updates by itself while the job runs. Its heading names the job in progress (**Training your model**, **Making predictions**, **Running a module**, **Exporting the models**, **Explaining the model**) and, once the job has ended, the run (**Model training**, **Prediction run**, **Module run**, **Model export**, **Model explanation**). **Stop training** (or the matching button of the other kinds) stops the job after you confirm; a stopped training saves no model. When the job is done, Fione takes you to the result: for a training, the prediction summary of the new model. To open the job page of a trained model later, use the **Training job** link on the **Overview** tab of its model page. A failed job shows its message. Once a job has finished, **See details** lists the notices and errors of the run (the last 20, in English), for example that the folds were lowered, that a family was left out, that the validated score is too good to be true, or that a column may give the answer away.
 
 **Jobs** in the project menu lists every job of the project: **Training**, **Prediction**, **Module**, **Model export** and **Explanation**. Filter by **Kind** and **Status** (**Queued**, **Running**, **Done**, **Failed** or **Cancelled**). The list shows when each job was created and started and how long it took, refreshes itself (every few seconds while something runs, every half minute otherwise), and offers **Stop** for an active job and **Delete** for a finished one, with a confirmation. **Delete all finished jobs** removes their logs too; the models and predictions they made are kept, and running and waiting jobs stay. All of this needs write access to the project; readers can look at the list.
 

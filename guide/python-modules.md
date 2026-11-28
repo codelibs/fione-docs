@@ -55,9 +55,9 @@ The result of a `predict` module is saved as a dataset of type `predict`; the re
 | `split` | Split into train, valid and test | Returns one `part` (`train`, `valid` or `test`) of a random split by `train_ratio`, `valid_ratio`, `test_ratio` (relative weights, 70, 15 and 15 by default) and `seed`. Rows keep their order. |
 | `tokenize` | Tokenize text | Splits a text column (`target_column`) into one token per row, with an empty row after each document. `mode` is `word` (runs of letters, digits and `_`; the default), `whitespace` or `delimiter` (with `delimiter`). |
 
-`row_conditions` is a text such as `age >= 30 & country == JP`: terms of the form `column operator value` (operators `==`, `!=`, `<`, `<=`, `>`, `>=`, with a space on each side) or `column is empty` / `column is not empty`, joined by `&` (and) and `|` (or); `&` binds tighter. Parentheses are not supported, and a value cannot contain `&` or `|`. An empty cell never matches a comparison, not even `!=`. An empty text matches every row.
+`row_conditions` is a text such as `age >= 30 & country == JP`: terms of the form `column operator value` (operators `==`, `!=`, `<`, `<=`, `>`, `>=`, with a space on each side) or `column is empty` / `column is not empty`, joined by `&` (and) and `|` (or); `&` binds tighter. Parentheses are not supported, and a value cannot contain `&` or `|`. An empty cell never matches a comparison, not even `!=`. An empty text matches every row. A date column is compared with a date written year-month-day: `ordered >= 2015-07-01`, or `ordered < 2015-07-01 08:30` with a time of day (without one it is midnight, in the time zone of the column if it has one). `replace` writes such a date into a date column the same way.
 
-The modules that compute with columns (`calc`, `lag`, `rolling`, `rank`, `floor`, `cor` and the clustering modules below) need integer or float columns (booleans count as 1 and 0 in `calc`); the job fails and names a text or date column. Column names and types are checked when the job runs.
+The modules that compute with columns (`calc`, `lag`, `rolling`, `rank`, `floor`, `cor` and the clustering modules below) need integer or float columns (booleans count as 1 and 0 in `calc`, and a date column is read there through `days`); the job fails and names a text or date column. Column names and types are checked when the job runs.
 
 #### Joining
 
@@ -78,6 +78,7 @@ Each key may appear only once in the other dataset. If it appears more than once
 - Column names are written as they are; a name with spaces or symbols, or one that is not a plain word, is written `col("unit price")`.
 - Arithmetic `+ - * / **`; comparisons `== != < <= > >=` and logic `&`, `|`, `~` give 1 or 0. Put each comparison in parentheses before joining it with `&` or `|`.
 - Functions: `abs`, `sqrt`, `log`, `log1p`, `exp`, `floor`, `sin`, `cos`, `radians`, `min2(a, b)`, `max2(a, b)`, `mod2(a, b)`, `atan2(y, x)`, `clip(x, lo, hi)`, `isnull(x)`, `where(cond, x, y)` and the constant `nan`.
+- `days(column)` gives the days since 1970-01-01 of a column of dates, or of text written year-month-day (`2015-07-01`, with a time of day if you like), with the time of day as a fraction and empty for a missing date. The difference of two such columns is the days between them, for example `days(shipped) - days(ordered)`. Text in another order (`7/1/2015`) is refused, since it could be read as two different days.
 - Row functions `rowsum`, `rowmean` and `rowcount` take values and quoted name patterns, such as `rowsum("score_*")`, and skip empty values.
 
 A result that comes out infinite (division by zero, `log(0)`) is left empty, and the job reports how many rows that happened in.
