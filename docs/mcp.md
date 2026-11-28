@@ -42,6 +42,26 @@ export FIONE_TOKEN=<your-token>
 codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE_TOKEN
 ```
 
+## Tools for reading {#reading-tools}
+
+Every client gets these 14 tools, also while the tools that change things are off. They need read access to the project and change nothing.
+
+| Tool | What it does |
+|---|---|
+| `list_projects` | The projects the user can read, with the number of datasets and models in each. |
+| `list_datasets` | The datasets of a project: id, name, type and size. |
+| `describe_dataset` | A dataset's columns (kind, missing share, statistics), the strongest correlations and, given `target`, the columns that may give it away. |
+| `get_column_stats` | The statistics of one column. |
+| `find_table_links` | The datasets of a project that can be joined: columns with related names and mostly the same values. Nothing is joined. |
+| `propose_join`, `propose_first_join` | A Join of a dataset onto a base dataset, or the first Join for a column to predict (see [Proposals](#proposals)). Nothing is started. |
+| `propose_training_config` | A training configuration for a dataset and a column to predict (see [Proposals](#proposals)). Nothing is started. |
+| `list_models` | The trained models of a project, newest first. |
+| `get_leaderboard` | The leaderboard, metrics and task of a model. |
+| `get_feature_importance` | The most important inputs of a model, as the training recorded them (`gain`) or from the explanation job (`contributions`). |
+| `get_model_diagnostics` | The diagnostics from a model's cross-validation predictions: confusion matrix and per-class scores, ROC and precision-recall curves and calibration, or residuals. |
+| `get_partial_dependence` | How a model's average prediction changes with one input, as the explanation job stored it. |
+| `get_training_events` | The latest progress events of a job. |
+
 ## Starting jobs from an MCP client
 
 While the tools that change things are on, the client also gets the tools below, as the token's user. `create_project` needs the role of an editor or an administrator; `upload_dataset`, `create_upload_url`, `start_training`, `start_batch_predict`, `run_module` and `cancel_job` need write access to the project (an administrator, or an owner or editor of it whose role is not viewer, as for the REST API); `list_modules` is open to every token; the others need only read access. A job that belongs to no project can be read or cancelled only by an administrator.
@@ -51,7 +71,7 @@ While the tools that change things are on, the client also gets the tools below,
 | `create_project` | Creates a project the user owns and returns its `project_id`. |
 | `upload_dataset` | Adds a dataset (type `train`, `test` or `predict`) from CSV text sent inline, at most 512 KiB of UTF-8. |
 | `create_upload_url` | Returns a one-time URL for a CSV file of any size up to `FIONE_MAX_UPLOAD_BYTES`. |
-| `start_training`, `start_batch_predict`, `run_module` | Queue a job and return its `job_id`. |
+| `start_training`, `start_batch_predict`, `run_module` | Queue a job and return its `job_id`. `start_training` takes `project_id`, `dataset_id`, `config` (the training configuration, with `target`), an optional `name` and optional `extra_dataset_ids`, other training datasets of the project whose rows are only learned from (see [Extra training data](/guide/automl#extra-training-data)). |
 | `list_modules` | Lists the Python modules with their kind and parameters. |
 | `get_job`, `wait_for_job`, `list_jobs` | Show a job's status and, once finished, its result (`model_id` of a training, `dataset_id` of a batch prediction); `list_jobs` returns the newest 50 jobs, optionally of one `project_id` and one `status` (`queued`, `running`, `done`, `failed`, `cancelled`). |
 | `cancel_job` | Cancels a queued or running job. |
@@ -70,4 +90,6 @@ They delete nothing. Only `predict` and `get_predictions` return values from the
 
 The result of `propose_join` has the keys `proposal` (`true`), `kind` (`join`), `config` (the parameters of the Join module), `warnings` and `rationale`. `propose_first_join` takes the project and `target`, the column to predict, and has the same keys and `dataset_id`, the base dataset it chose; it is the join that the **Propose a join** button proposes (see [Join datasets](/guide/automl#join-datasets)).
 
-The result of `propose_training_config` has the keys `proposal` (`true`), `config`, `ignored_suggestions`, `warnings` and `rationale`. Each warning is an object `{code, message, params}`: `message` is an English sentence, and `code` with `params` name the warning in a form any language can be built from. Each entry of `ignored_suggestions` is `{column, reason, code}`, with `reason` in English too.
+`propose_training_config` takes `dataset_id` and `target`, and optionally `notes`, `max_runtime_secs`, `decision` (`argmax`, `balanced`, `tuned` or `cost`), `cost_miss` and `cost_false_alarm` (with `cost`; see [Choosing the predicted class](/guide/automl#choosing-the-predicted-class)), `target_transform`, `sort_metric`, `group_column` (**Keep related rows together by**), `event_column` and `time_column` (**Order of the rows in time**). Its result has the keys `proposal` (`true`), `config`, `ignored_suggestions`, `warnings` and `rationale`. Each warning is an object `{code, message, params}`: `message` is an English sentence, and `code` with `params` name the warning in a form any language can be built from. Each entry of `ignored_suggestions` is `{column, reason, code}`, with `reason` in English too.
+
+The proposed `config` already lists ID-like columns, with the other columns it leaves out, in `ignored_columns` (200 at most; a warning says when more ID-like columns stay in), so it can go to `start_training` as it is. Training does not leave out ID columns by itself, so with a configuration written by hand, start from the proposal's `config` or list such columns in `ignored_columns` yourself.

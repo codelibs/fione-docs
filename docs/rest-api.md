@@ -213,7 +213,7 @@ All paths are relative to `/api/v1`. The last column says who may call the endpo
 | `DELETE /projects/{project_id}/datasets/{dataset_id}` | Deletes the dataset. | Write |
 | `GET /projects/{project_id}/datasets/{dataset_id}/download` | The dataset as UTF-8 CSV. | Read |
 | `GET /projects/{project_id}/datasets/{dataset_id}/preview?rows=50` | The first rows (at most 200) as `{"columns": [...], "rows": [[...]]}`. | Read |
-| `GET /projects/{project_id}/datasets/{dataset_id}/profile` | Column statistics, histograms and correlations of a sample of about 100,000 rows spread over the whole dataset (`n_rows` is the dataset's rows, `sample_rows` the rows profiled). With `?target=<column>`, also leak suspects. | Read |
+| `GET /projects/{project_id}/datasets/{dataset_id}/profile` | Column statistics, histograms and correlations of a sample of about 100,000 rows spread over the whole dataset (`n_rows` is the dataset's rows, `sample_rows` the rows profiled). With `?target=<column>`, also the leak suspects (`leak_suspects`, each with `kind` `exact` or `score`), `derived` (`{column, keys, share}`: the number column and the category columns the target looks computed from, or `null`) and `paired` (`{first, second, share}`: two columns that fix the target together, or `null`). | Read |
 | `GET /projects/{project_id}/datasets/{dataset_id}/columns/{column}` | The profile of one column. | Read |
 | `PUT /uploads/{token}` | Takes the raw CSV as the body for a one-time upload URL from the MCP tool `create_upload_url` (see [MCP](/guide/mcp)); answers like a dataset upload. No API token: the URL is the credential. An unknown, used or expired URL, or MCP or its tools that change things off, answers 404; a file over the limit 413, a CSV that does not parse 422 `invalid_csv`. | Holder of the URL |
 
@@ -223,7 +223,7 @@ Training, prediction, explanation, module and export runs are all jobs. Submitti
 
 | Method and path | What it does | Who |
 |---|---|---|
-| `POST /projects/{project_id}/jobs/automl` | Trains on a `train` dataset: `dataset_id`, `config` (with `target`), optional `name`. | Write |
+| `POST /projects/{project_id}/jobs/automl` | Trains on a `train` dataset: `dataset_id`, `config` (with `target`), optional `name` and optional `extra_dataset_ids`, up to 10 other `train` datasets of the project whose rows are only learned from, never validated (see [Extra training data](/guide/automl#extra-training-data)). | Write |
 | `POST /projects/{project_id}/jobs/batch-predict` | Predicts a dataset with a model: `model_id`, `dataset_id`, optional `include_columns`, `name`, `include_contributions`. | Write |
 | `POST /projects/{project_id}/jobs/explain` | Computes a model's stored explanation again: `model_id`, optional `dataset_id`. | Write |
 | `POST /projects/{project_id}/jobs/module` | Runs a [Python module](/guide/python-modules): `module_id`, `dataset_id`, `params`, optional `name`. | Write |

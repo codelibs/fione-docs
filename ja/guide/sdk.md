@@ -73,7 +73,7 @@ new_rows = pd.read_csv("new_rows.csv")  # 同じ入力列。"species" は含め�
 predictions = fione.predict(project["id"], model_id, new_rows)  # "predict" 列つき
 ```
 
-`train(project_id, dataset_id, target, *, name=None, **config)` は、予測する列と、そのほかの学習オプションをキーワード引数で受け取ります。データセットは `train` タイプである必要があります。オプションは次のとおりです。
+`train(project_id, dataset_id, target, *, name=None, extra_dataset_ids=None, **config)` は、予測する列と、そのほかの学習オプションをキーワード引数で受け取ります。データセットは `train` タイプである必要があります。`extra_dataset_ids` には、学習だけに使い、検証には使わない、プロジェクトのほかの `train` データセットを指定します([追加の学習データ](/ja/guide/automl#extra-training-data)を参照)。オプションは次のとおりです。
 
 | オプション | 初期値 | 意味 |
 |---|---|---|
@@ -87,7 +87,8 @@ predictions = fione.predict(project["id"], model_id, new_rows)  # "predict" 列�
 | `time_column` | なし | 時間の先を検証します。この数値または日付の列で並べた行をいくつかに区切り、各分割は予測する部分より前の部分から学習します。 |
 | `seed` | `0` | 同じ値なら同じ分割と探索になります。 |
 | `balance_classes` | `False` | 少数のクラスに大きな重みを付けて学習します。 |
-| `decision` | `"argmax"` | `"argmax"`、`"balanced"`（クラスの大きさで調整。`balance_classes` とは併用できません）、`"tuned"`（判定のしきい値を `sort_metric` に合わせます。2 クラス、または順序のあるクラスで `qwk` のとき）。回帰では無視されます。 |
+| `decision` | `"argmax"` | `"argmax"`、`"balanced"`（クラスの大きさで調整。`balance_classes` とは併用できません）、`"tuned"`（判定のしきい値を `sort_metric` に合わせます。2 クラス、または順序のあるクラスで `qwk` のとき）、`"cost"`（コストが最小になるしきい値。2 クラス）。回帰では無視されます。 |
+| `cost_miss`、`cost_false_alarm` | なし | `decision="cost"` のときだけ使い、そのときはどちらも必須です。後ろに並ぶクラスの行を別のクラスと予測したときのコストと、その逆のコスト（0 より大きく 1e12 以下、同じ単位）。 |
 | `target_transform` | `"none"` | `"none"` か `"log1p"`（回帰のみ。分類では無視されます）。 |
 | `quantile` | なし | 回帰の目的変数の平均ではなく、この分位点（0 と 1 の間）を pinball 損失で学習します。 |
 | `event_column` | なし | 生存時間：目的変数は途中で打ち切られうる時間で、この 0/1 の列はその時点でイベントが起きたかを示します。モデルは `concordance` で順位付けされます。`quantile` や `target_transform` とは併用できません。 |
@@ -96,6 +97,10 @@ predictions = fione.predict(project["id"], model_id, new_rows)  # "predict" 列�
 | `sort_metric` | `"auto"` | リーダーボードの順位付けに使うスコア（後述）。 |
 | `keep_cv_predictions`、`keep_cv_models`、`keep_cv_fold_assignment` | `False` | 交差検証の結果を残します（モデルを残すとモデルファイルがかなり大きくなります）。 |
 | `ignored_columns` | `[]` | 入力として使わない列。 |
+| `extra_weight` | `1` | 学習での `extra_dataset_ids` の行の重み（0 より大きく 1e6 以下）。スコアに重みは付けません。 |
+| `embedding_backend`、`embedding_model`、`embedding_layer`、`embedding_max_length` | なし、`""`、`0.75`、`384` | TextEmbedding のモデル種類が使う、テキストの列の言語モデルによるベクトル。[言語モデルによるテキストのベクトル](/ja/guide/automl#text-embedding)を参照してください。 |
+
+学習は ID の列を自分では外しません(外すのは空の列と値が 1 種類の列だけです)。自分で書いた設定では、たとえば行番号も、ほかの数値と同じく入力になります。ID のような列は `ignored_columns` に書くか、それを除いた設定から列を取ってください。学習の設定のページはそれらのチェックを外し、MCP のツール `propose_training_config`([MCP](/ja/docs/mcp#proposals)を参照)は、それらを 200 列まで `ignored_columns` に入れます。
 
 `sort_metric` と `stopping_metric` に指定できるのは、`auto`、または `logloss`、`auc`、`aucpr`、`accuracy`、`balanced_accuracy`、`f1`、`macro_f1`、`precision`、`recall`、`mcc`、`kappa`、`qwk`、`rounded_qwk`、`brier`、`balanced_logloss`、`top3_accuracy`、`map3`、`gini`、`normalized_gini`、`lift_top_group`、`misclassification`、`mean_per_class_error`、`rmse`、`mse`、`mae`、`medae`、`r2`、`rmsle`、`mape`、`rmspe`、`smape`、`explained_variance`、`pearson`、`spearman`、`poisson`、`pinball`（`quantile` と併用）、`concordance`（`event_column` と併用）のうちタスクに合うものです。設定と指標の説明は [AutoML 画面](/ja/guide/automl#training-settings)にあります。
 

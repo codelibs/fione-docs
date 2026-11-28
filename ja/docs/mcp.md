@@ -42,6 +42,26 @@ export FIONE_TOKEN=<your-token>
 codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE_TOKEN
 ```
 
+## 読み取りのツール {#reading-tools}
+
+どのクライアントも、変更を行うツールがオフのときも含めて、次の 14 のツールを使えます。プロジェクトの読み取り権限が必要で、何も変更しません。
+
+| ツール | できること |
+|---|---|
+| `list_projects` | ユーザーが読めるプロジェクトと、それぞれのデータセットとモデルの数。 |
+| `list_datasets` | プロジェクトのデータセット (ID、名前、タイプ、大きさ)。 |
+| `describe_dataset` | データセットの列 (種類、空の割合、統計量)、強い相関と、`target` を指定したときは答えを漏らすおそれのある列。 |
+| `get_column_stats` | 1 つの列の統計量。 |
+| `find_table_links` | プロジェクトの中で結合できるデータセット (名前が関係し、値がほぼ同じ列)。結合はしません。 |
+| `propose_join`、`propose_first_join` | 土台のデータセットへのデータセットの Join、または予測する列のための最初の Join ([提案](#proposals)を参照)。何も開始しません。 |
+| `propose_training_config` | データセットと予測する列の学習設定 ([提案](#proposals)を参照)。何も開始しません。 |
+| `list_models` | プロジェクトの学習済みモデル (新しい順)。 |
+| `get_leaderboard` | モデルのリーダーボード、指標、タスク。 |
+| `get_feature_importance` | モデルの重要な入力。学習時に記録したもの (`gain`) か、説明のジョブで求めたもの (`contributions`)。 |
+| `get_model_diagnostics` | モデルの交差検証の予測から求めた診断 (混同行列とクラスごとのスコア、ROC 曲線と適合率・再現率曲線と較正、または残差)。 |
+| `get_partial_dependence` | 1 つの入力によってモデルの予測の平均がどう変わるか (説明のジョブが保存したもの)。 |
+| `get_training_events` | ジョブの最新の進み具合のイベント。 |
+
 ## MCP クライアントからジョブを開始する {#starting-jobs-from-an-mcp-client}
 
 変更を行うツールがオンのとき、クライアントは、トークンのユーザーとして次のツールも使えます。`create_project` は編集者または管理者のロールが必要です。`upload_dataset`、`create_upload_url`、`start_training`、`start_batch_predict`、`run_module`、`cancel_job` はプロジェクトへの書き込み権限が必要です (REST API と同じく、管理者、またはロールが閲覧者でないそのプロジェクトの所有者・編集者)。`list_modules` はどのトークンでも使えます。ほかは読み取り権限だけで使えます。プロジェクトに属さないジョブを読んだり取り消したりできるのは管理者だけです。
@@ -51,7 +71,7 @@ codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE
 | `create_project` | ユーザーが所有するプロジェクトを作り、`project_id` を返します。 |
 | `upload_dataset` | インラインで送った CSV の文章 (UTF-8 で 512 KiB まで) から、データセット (タイプ `train`、`test`、`predict`) を追加します。 |
 | `create_upload_url` | `FIONE_MAX_UPLOAD_BYTES` までの大きさの CSV ファイルを送るための、一度だけ使える URL を返します。 |
-| `start_training`、`start_batch_predict`、`run_module` | ジョブを積み、`job_id` を返します。 |
+| `start_training`、`start_batch_predict`、`run_module` | ジョブを積み、`job_id` を返します。`start_training` は `project_id`、`dataset_id`、`config` (`target` を含む学習設定)、任意の `name` と、任意の `extra_dataset_ids` (学習だけに使う、プロジェクトのほかの学習データ。[追加の学習データ](/ja/guide/automl#extra-training-data)を参照) を受け取ります。 |
 | `list_modules` | Python モジュールを、種類とパラメーターとともに一覧します。 |
 | `get_job`、`wait_for_job`、`list_jobs` | ジョブの状態と、終了後はその結果 (学習の `model_id`、バッチ予測の `dataset_id`) を返します。`list_jobs` は新しい順に 50 件で、`project_id` と `status` (`queued`、`running`、`done`、`failed`、`cancelled`) で絞り込めます。 |
 | `cancel_job` | 待機中または実行中のジョブをキャンセルします。 |
@@ -70,4 +90,6 @@ codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE
 
 `propose_join` の結果は、キー `proposal` (`true`)、`kind` (`join`)、`config` (Join モジュールのパラメーター)、`warnings`、`rationale` を持ちます。`propose_first_join` はプロジェクトと、予測する列 `target` を受け取り、同じキーに加えて、選んだ土台のデータセット `dataset_id` を返します。**結合を提案**ボタンが提案するのと同じ結合です ([データセットの結合](/ja/guide/automl#join-datasets)を参照)。
 
-`propose_training_config` の結果は、キー `proposal` (`true`)、`config`、`ignored_suggestions`、`warnings`、`rationale` を持ちます。各警告は `{code, message, params}` のオブジェクトで、`message` は英語の文、`code` と `params` はどの言語の文でも組み立てられる形で警告を表します。`ignored_suggestions` の各要素は `{column, reason, code}` で、`reason` も英語です。
+`propose_training_config` は `dataset_id` と `target`、任意で `notes`、`max_runtime_secs`、`decision` (`argmax`、`balanced`、`tuned`、`cost`)、`cost_miss` と `cost_false_alarm` (`cost` のとき。[予測クラスの決め方](/ja/guide/automl#choosing-the-predicted-class)を参照)、`target_transform`、`sort_metric`、`group_column` (**同じ値の行をまとめる列**)、`event_column`、`time_column` (**行の時間順**) を受け取ります。結果は、キー `proposal` (`true`)、`config`、`ignored_suggestions`、`warnings`、`rationale` を持ちます。各警告は `{code, message, params}` のオブジェクトで、`message` は英語の文、`code` と `params` はどの言語の文でも組み立てられる形で警告を表します。`ignored_suggestions` の各要素は `{column, reason, code}` で、`reason` も英語です。
+
+提案の `config` は、ID のような列を、除くほかの列とともに `ignored_columns` に入れてあるので (200 列まで。それより多い ID のような列が残るときは警告が出ます)、そのまま `start_training` に渡せます。学習は ID の列を自分では外さないので、設定を手で書くときは、提案の `config` から始めるか、そのような列を自分で `ignored_columns` に書いてください。

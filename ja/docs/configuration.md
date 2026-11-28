@@ -62,13 +62,22 @@ Compose 構成で `docker/.env` が効くのは、[Compose の変数](#compose-�
 | `FIONE_LLM_MODEL` | `ollama` では `gemma4:12b-mlx`、`claude` では `claude-opus-5-5` | リクエストごとに送るモデル名 (表示可能な ASCII 文字で 1〜200 文字)。MLX モデルは、Apple Silicon の Mac のホストに入れた Ollama でだけ動き、Fione はその API 経由で使います。それ以外 (Linux やコンテナ内の Ollama) では `gemma4:12b` のような MLX ではないタグを使ってください。 | 別のモデルを使うとき、MLX が動かないマシンのとき。 |
 | `FIONE_LLM_EXTRA_BODY` | 未設定 | `ollama` のみ (`claude` では拒否されます)。すべてのリクエストにマージする JSON オブジェクト。例: `{"reasoning_effort": "none"}`。キー `model`、`messages`、`tools`、`stream`、`stream_options`、`max_tokens` は指定できません。未設定のときは `{"reasoning_effort": "none"}` です。 | Ollama サーバーで思考をオンにしたり、サンプリングのオプションを指定したりするとき。 |
 | `FIONE_LLM_AUTO_PULL` | `false` | `ollama` のとき、サーバーにモデルがなければダウンロードし、進み具合を**システムの状態**ページに表示します。`false` ならサーバーのモデルは利用者に任され、モデルがないときはページにダウンロードのボタンが出ます。`claude` では無視されます。 | 確認なしでダウンロードさせたいとき。たとえば Fione だけが使う Ollama サーバーなど。 |
-| `FIONE_LLM_MAX_TOKENS` | `1024` (`claude` では `16000`) | 1 回の応答のトークン数の上限 (思考を含む)。64〜64000 で、`FIONE_LLM_CONTEXT_TOKENS` より 5240 以上小さくします。 | 長い答えが必要なとき、遅いモデルを抑えたいとき。 |
-| `FIONE_LLM_CONTEXT_TOKENS` | `16384` (`claude` では `200000`) | 1 回のリクエストのトークン予算。Fione が送るプロンプトの最大長で、応答を含みます。262144 まで。`FIONE_LLM_CONTEXT_TOKENS` から `FIONE_LLM_MAX_TOKENS` を引いた値は 5240 以上が必要です。アシスタントのツールと指示で約 5,200 トークン使うため、それより小さいと質問を入れる余地がありません。モデルのコンテキストウィンドウを超えない値にしてください。Ollama では、Fione はサーバーがモデルを読み込んだときのコンテキストにも合わせます。Ollama の既定の 4096 でもツールには小さすぎます。Ollama サーバーに `OLLAMA_CONTEXT_LENGTH=16384` を設定してください (Compose の `ollama` プロファイルは設定済み。ホストの Ollama では自分で設定します)。 | モデルのコンテキストウィンドウに合わせるとき。 |
+| `FIONE_LLM_MAX_TOKENS` | `1024` (`claude` では `16000`) | 1 回の応答のトークン数の上限 (思考を含む)。64〜64000 で、`FIONE_LLM_CONTEXT_TOKENS` より 5560 以上小さくします。 | 長い答えが必要なとき、遅いモデルを抑えたいとき。 |
+| `FIONE_LLM_CONTEXT_TOKENS` | `16384` (`claude` では `200000`) | 1 回のリクエストのトークン予算。Fione が送るプロンプトの最大長で、応答を含みます。262144 まで。`FIONE_LLM_CONTEXT_TOKENS` から `FIONE_LLM_MAX_TOKENS` を引いた値は 5560 以上が必要です。アシスタントのツールと指示で約 5,500 トークン使うため、それより小さいと質問を入れる余地がありません。モデルのコンテキストウィンドウを超えない値にしてください。Ollama では、Fione はサーバーがモデルを読み込んだときのコンテキストにも合わせます。Ollama の既定の 4096 でもツールには小さすぎます。Ollama サーバーに `OLLAMA_CONTEXT_LENGTH=16384` を設定してください (Compose の `ollama` プロファイルは設定済み。ホストの Ollama では自分で設定します)。 | モデルのコンテキストウィンドウに合わせるとき。 |
 | `FIONE_LLM_MAX_TOOL_ROUNDS` | `6` | 1 つの答えがツールを呼べる回数。超えると「手順が多すぎる」として止まります。1〜20。 | 調べる回数が多い質問のとき。 |
 | `FIONE_LLM_TURN_TIMEOUT_SECS` | `180` | 1 つの答えにかけられる時間 (ツールの全ラウンドを含む)。超えるとタイムアウトで終わります。10〜1800。 | モデルやハードウェアが遅いとき。 |
 | `FIONE_LLM_MAX_CONCURRENT_TURNS` | `2` | 全ユーザー合計で同時に書く答えの数。超えた分は待ち行列に入ります。1〜16。 | 並列リクエストを処理できるサーバーのとき。 |
 | `FIONE_MCP_ENABLED` | `true` | 読み取り専用のツールを、Fione 自身のポートの `/mcp` で [MCP](/ja/docs/mcp) として提供します (Streamable HTTP、POST 上の JSON-RPC、ステートレス)。クライアントには `Authorization: Bearer` の API トークンが必要で、セッション Cookie は拒否されます。トークンのユーザーが読めるプロジェクトの読み取り専用ツールを一覧・呼び出しでき、データセットの値の例は受け取りません。これだけでは、何かを開始・変更・削除することはできません。Fione 側の言語モデルは要りません (アシスタントはオフでかまいません)。管理者は**システムの状態**ページでもオフにし、またオンに戻せます。`false` なら、そのページの表示にかかわらずオフのままです。 | MCP をオフのままにするときは `false`。 |
 | `FIONE_MCP_WRITE_ENABLED` | `true` | `FIONE_MCP_ENABLED` に加えて、MCP クライアントに次のツールを提供します。プロジェクトを作る (`create_project`)、データセットを追加する (`upload_dataset`、`create_upload_url`)、学習 (`start_training`)・予測 (`start_batch_predict`)・モジュール実行 (`run_module`) を積む、行をすぐに予測する (`predict`)、ジョブをキャンセルする (`cancel_job`)、そしてそれに続く `list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`get_predictions` です。トークンのユーザーとして動作します。プロジェクトの作成には編集者または管理者のロールが必要です。アップロード、ジョブを積むこと、キャンセルには、REST API と同じくプロジェクトへの書き込み権限が必要です。`list_modules`、`get_job`、`wait_for_job`、`list_jobs`、`predict`、`get_predictions` は読み取り権限だけで使えます。何も削除しません。**システムの状態**ページでオフにし、またオンに戻せます。`false` なら、そのページの表示にかかわらずオフのままです。 | MCP クライアントに読み取りだけをさせるときは `false`。[MCP で AI ツールから AutoML を一通り実行する](/ja/guide/mcp)を参照。 |
+
+### 言語モデルによるテキストのベクトル {#embedding}
+
+TextEmbedding のモデル種類が学習と予測をする場所で、エンジンが読みます([言語モデルによるテキストのベクトル](/ja/guide/automl#text-embedding)を参照)。標準のイメージには埋め込みのバックエンドがないため、そこでは、ほかの場所で作ったキャッシュを読むときだけ意味があります。
+
+| 変数 | 既定値 | 内容 | 変更する場面 |
+|---|---|---|---|
+| `FIONE_EMBEDDING_CACHE_DIR` | 未設定 | ベクトルのキャッシュのディレクトリ。未設定なら、ベクトルはそのプロセスのメモリにだけ置かれます。 | 実行をまたいでベクトルを使い回すとき、別のマシンで計算したベクトルを読むとき。 |
+| `FIONE_EMBEDDING_MODEL_DIR` | 未設定 | `torch_lm` バックエンド (torch と transformers で読む Hugging Face のモデル) のモデルのディレクトリ。 | そのバックエンドを動かす場所で。 |
 
 設定ではない固定の上限: モデルのインポートファイルは 512 MiB まで、アップロードする Python モジュールは 256 KiB までです。
 
