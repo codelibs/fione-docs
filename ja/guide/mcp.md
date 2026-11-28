@@ -50,7 +50,7 @@ Claude は次の手順で進めます。それぞれが出力で確認できる�
 4. `start_training` がジョブを積みます。`wait_for_job` を `done` が `true` になるまで繰り返し呼び、終わったジョブの結果に `model_id` が入っています。
 5. `get_leaderboard` (必要に応じて `get_feature_importance` や `get_model_diagnostics`) で、モデルの比較と重要な列を確認します。
 
-大事なことは同じように言葉で頼めば、クライアントが渡します。`propose_training_config` は、決め方 (`cost` なら見逃しと誤検出のコスト)、行をまとめる列 (`group_column`)、行の時間順 (`time_column`)、途中で打ち切られうる時間のイベント (`event_column`) などを受け取ります。その設定は ID のように見える列をすでに除いています。クライアントが手で書いた設定は、除外しないすべての列で学習し、ID も使うので、提案から始めてもらってください。検証には使わずに学習する行を増やすには (古いデータ、別の店舗の履歴など)、それを指定します。`start_training` は、プロジェクトのほかの学習データを `extra_dataset_ids` で受け取ります ([追加の学習データ](/ja/guide/automl#extra-training-data)を参照)。ツールごとの説明は [MCP](/ja/docs/mcp#reading-tools) にあります。
+大事なことは同じように言葉で頼めば、クライアントが渡します。`propose_training_config` は、決め方 (`cost` なら見逃しと誤検出のコスト)、行をまとめる列 (`group_column`)、行の時間順 (`time_column`)、途中で打ち切られうる時間のイベント (`event_column`) などを受け取ります。その設定は ID のように見える列をすでに除いています。学習は ID の列を自分では外さないので、設定を手で書くのではなく、提案から始めてもらってください。検証には使わずに学習する行を増やすには (古いデータ、別の店舗の履歴など)、それを指定します。`start_training` は、プロジェクトのほかの学習データを `extra_dataset_ids` で受け取ります ([追加の学習データ](/ja/guide/automl#extra-training-data)を参照)。ツールごとの説明は [MCP](/ja/docs/mcp#reading-tools) にあります。
 
 何かを変えるツールはそう申告し、Claude Code などのクライアントは、許可していなければ実行前に確認します。Fione 自身は確認できないので、これが唯一の確認です。承認は有効のままにしてください。
 

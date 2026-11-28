@@ -92,4 +92,4 @@ codex mcp add fione --url http://127.0.0.1:8080/mcp --bearer-token-env-var FIONE
 
 `propose_training_config` は `dataset_id` と `target`、任意で `notes`、`max_runtime_secs`、`decision` (`argmax`、`balanced`、`tuned`、`cost`)、`cost_miss` と `cost_false_alarm` (`cost` のとき。[予測クラスの決め方](/ja/guide/automl#choosing-the-predicted-class)を参照)、`target_transform`、`sort_metric`、`group_column` (**同じ値の行をまとめる列**)、`event_column`、`time_column` (**行の時間順**) を受け取ります。結果は、キー `proposal` (`true`)、`config`、`ignored_suggestions`、`warnings`、`rationale` を持ちます。各警告は `{code, message, params}` のオブジェクトで、`message` は英語の文、`code` と `params` はどの言語の文でも組み立てられる形で警告を表します。`ignored_suggestions` の各要素は `{column, reason, code}` で、`reason` も英語です。
 
-提案の `config` は、ID のような列を、除くほかの列とともに `ignored_columns` に入れてあるので (200 列まで。それより多い ID のような列が残るときは警告が出ます)、そのまま `start_training` に渡せます。手で書いた設定は、除外しないすべての列で学習し、ID の列も使います。提案の `config` から始めるか、そのような列を自分で `ignored_columns` に書いてください。
+提案の `config` は、ID のような列を、除くほかの列とともに `ignored_columns` に入れてあるので (200 列まで。それより多い ID のような列が残るときは警告が出ます)、そのまま `start_training` に渡せます。学習は ID の列を自分では外さないので、設定を手で書くときは、提案の `config` から始めるか、そのような列を自分で `ignored_columns` に書いてください。
