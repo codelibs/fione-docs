@@ -97,10 +97,10 @@ predictions = fione.predict(project["id"], model_id, new_rows)  # "predict" 列�
 | `sort_metric` | `"auto"` | リーダーボードの順位付けに使うスコア（後述）。 |
 | `keep_cv_predictions`、`keep_cv_models`、`keep_cv_fold_assignment` | `False` | 交差検証の結果を残します（モデルを残すとモデルファイルがかなり大きくなります）。 |
 | `ignored_columns` | `[]` | 入力として使わない列。 |
-| `extra_weight` | `1` | 学習での `extra_dataset_ids` の行の重み（0 より大きい値）。スコアに重みは付けません。 |
+| `extra_weight` | `1` | 学習での `extra_dataset_ids` の行の重み（0 より大きく 1e6 以下）。スコアに重みは付けません。 |
 | `embedding_backend`、`embedding_model`、`embedding_layer`、`embedding_max_length` | なし、`""`、`0.75`、`384` | TextEmbedding のモデル種類が使う、テキストの列の言語モデルによるベクトル。[言語モデルによるテキストのベクトル](/ja/guide/automl#text-embedding)を参照してください。 |
 
-自分で書いた設定では、予測する列と `ignored_columns` 以外のすべての列で学習します。ID の列も含みます。たとえば行番号も、ほかの数値と同じく入力になります。ID のような列は `ignored_columns` に書くか、それを除いた設定から列を取ってください。学習の設定のページはそれらのチェックを外し、MCP のツール `propose_training_config`([MCP](/ja/docs/mcp#proposals)を参照)は、それらを 200 列まで `ignored_columns` に入れます。
+学習は ID の列を自分では外しません(外すのは空の列と値が 1 種類の列だけです)。自分で書いた設定では、たとえば行番号も、ほかの数値と同じく入力になります。ID のような列は `ignored_columns` に書くか、それを除いた設定から列を取ってください。学習の設定のページはそれらのチェックを外し、MCP のツール `propose_training_config`([MCP](/ja/docs/mcp#proposals)を参照)は、それらを 200 列まで `ignored_columns` に入れます。
 
 `sort_metric` と `stopping_metric` に指定できるのは、`auto`、または `logloss`、`auc`、`aucpr`、`accuracy`、`balanced_accuracy`、`f1`、`macro_f1`、`precision`、`recall`、`mcc`、`kappa`、`qwk`、`rounded_qwk`、`brier`、`balanced_logloss`、`top3_accuracy`、`map3`、`gini`、`normalized_gini`、`lift_top_group`、`misclassification`、`mean_per_class_error`、`rmse`、`mse`、`mae`、`medae`、`r2`、`rmsle`、`mape`、`rmspe`、`smape`、`explained_variance`、`pearson`、`spearman`、`poisson`、`pinball`（`quantile` と併用）、`concordance`（`event_column` と併用）のうちタスクに合うものです。設定と指標の説明は [AutoML 画面](/ja/guide/automl#training-settings)にあります。
 

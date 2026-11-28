@@ -176,7 +176,7 @@ More rows of the same kind often help more than any setting: older data, another
 
 - The extra datasets need the column to predict and every column the model reads (columns in `ignored_columns` are not needed). Their values are read as the main dataset's are; a value that cannot be, or a class the main dataset lacks, is refused.
 - A row whose inputs equal those of a row of the main dataset is left out, since the validation would find it learned. Near copies are not found: leave them out of the extra data.
-- `extra_weight` (above 0; 1 by default) weights the extra rows against the main rows while learning; lower it for rows that are less alike. Scores are never weighted.
+- `extra_weight` (above 0, at most 1e6; 1 by default) weights the extra rows against the main rows while learning; lower it for rows that are less alike. Scores are never weighted.
 - With **Keep related rows together by**, extra rows that have the column are left out of the folds that validate their group; extra rows without it are learned from in every fold, and a notice says so. The class shares that **Adjust for class sizes** corrects for count the extra rows too.
 - Not with **Order of the rows in time** (`time_column`) or `event_column`.
 - Every fold fits the extra rows too, so a large extra data set leaves time for fewer tries, and the recommended run time does not count it: give such a run a longer maximum run time, and check on the leaderboard that the family that suits the data had more than its first try. The number of cross-validation repeats is decided by all the rows.

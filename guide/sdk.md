@@ -97,10 +97,10 @@ predictions = fione.predict(project["id"], model_id, new_rows)  # a "predict" co
 | `sort_metric` | `"auto"` | The score the leaderboard is ranked by (see below). |
 | `keep_cv_predictions`, `keep_cv_models`, `keep_cv_fold_assignment` | `False` | Keep cross-validation results (the models make the model file much larger). |
 | `ignored_columns` | `[]` | Columns that are not used as inputs. |
-| `extra_weight` | `1` | The weight of the rows of `extra_dataset_ids` while learning (above 0). Scores are never weighted. |
+| `extra_weight` | `1` | The weight of the rows of `extra_dataset_ids` while learning (above 0, at most 1e6). Scores are never weighted. |
 | `embedding_backend`, `embedding_model`, `embedding_layer`, `embedding_max_length` | none, `""`, `0.75`, `384` | Language-model vectors of the text columns for the TextEmbedding family; see [Language-model vectors of text](/guide/automl#text-embedding). |
 
-A configuration you write yourself trains on every column but the target and `ignored_columns`, ID columns included: a row number, for example, is then an input like any other number. List ID-like columns in `ignored_columns`, or take the columns from a configuration that leaves them out: the training settings page unchecks them, and the MCP tool `propose_training_config` (see [MCP](/docs/mcp#proposals)) lists them, up to 200, in its `ignored_columns`.
+Training does not leave out ID columns by itself (it drops only empty columns and columns with one value): with a configuration you write yourself, a row number, for example, is then an input like any other number. List ID-like columns in `ignored_columns`, or take the columns from a configuration that leaves them out: the training settings page unchecks them, and the MCP tool `propose_training_config` (see [MCP](/docs/mcp#proposals)) lists them, up to 200, in its `ignored_columns`.
 
 `sort_metric` and `stopping_metric` take `auto` or one of `logloss`, `auc`, `aucpr`, `accuracy`, `balanced_accuracy`, `f1`, `macro_f1`, `precision`, `recall`, `mcc`, `kappa`, `qwk`, `rounded_qwk`, `brier`, `balanced_logloss`, `top3_accuracy`, `map3`, `gini`, `normalized_gini`, `lift_top_group`, `misclassification`, `mean_per_class_error`, `rmse`, `mse`, `mae`, `medae`, `r2`, `rmsle`, `mape`, `rmspe`, `smape`, `explained_variance`, `pearson`, `spearman`, `poisson`, `pinball` (with `quantile`) and `concordance` (with `event_column`), as far as they fit the task. The settings and metrics are explained in [AutoML screens](/guide/automl#training-settings).
 
