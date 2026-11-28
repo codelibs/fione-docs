@@ -147,7 +147,7 @@ Three variants of it are *late candidates*:
 
 They run after all the other families, in the time kept for the late candidates (see [How the run time is spent](#how-the-run-time-is-spent)); that time is taken from the other families, not from TextLinear. They are not run for data without a text column.
 
-When the text columns are the only inputs that carry anything (the other columns, if any, have a different value on every row), only the text families are searched, and a notice names the families left out. A family called TextEmbedding reads the vectors of a language model instead of the words; it is set by script (see [Language-model vectors of text](#text-embedding)).
+When the running text is the only input the other families could read (every other column, if any, is text with a different value on every row, such as an ID) and no derived feature was added, only the text families are searched, and a notice names the families left out. A family called TextEmbedding reads the vectors of a language model instead of the words; it is set by script (see [Language-model vectors of text](#text-embedding)).
 
 ### Notations {#notations}
 
